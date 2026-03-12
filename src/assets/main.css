@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Design System DesaPOS */
+@layer base {
+  :root {
+    --color-primary: 59 130 246;
+    --color-secondary: 16 185 129;
+    --color-danger: 239 68 68;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
