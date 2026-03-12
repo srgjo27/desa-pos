@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import bcrypt from 'bcryptjs'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -9,27 +10,43 @@ export function useAuth() {
   const loading = ref(false)
   const error = ref(null)
 
-  async function login(email, password) {
+  async function login(name, pin) {
     loading.value = true
     error.value = null
 
     try {
-      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error: dbError } = await supabase
+        .from('users')
+        .select('id, name, role, pin')
+        .eq('name', name.trim())
+        .maybeSingle()
 
-      if (supabaseError) {
-        error.value = mapErrorMessage(supabaseError.message)
+      if (dbError) {
+        console.error('[DesaPOS] DB error saat login:', dbError)
+        error.value = 'Terjadi kesalahan sistem. Coba lagi nanti.'
         return { success: false }
       }
 
-      // Simpan session & user ke authStore
-      authStore.setUser(data.user, data.session)
+      if (!data) {
+        error.value = 'Nama pengguna atau PIN salah. Periksa kembali.'
+        return { success: false }
+      }
 
-      // Redirect berdasarkan role
-      const role = data.user?.user_metadata?.role
-      if (role === 'ADMIN') {
+      const isPinValid = await bcrypt.compare(pin, data.pin)
+      if (!isPinValid) {
+        error.value = 'Nama pengguna atau PIN salah. Periksa kembali.'
+        return { success: false }
+      }
+
+      if (!['KASIR', 'ADMIN'].includes(data.role)) {
+        error.value = 'Akun Anda belum dikonfigurasi. Hubungi Admin.'
+        return { success: false }
+      }
+
+      const { pin: _hash, ...safeUser } = data
+      authStore.setUser(safeUser)
+
+      if (data.role === 'ADMIN') {
         await router.push({ name: 'Dashboard' })
       } else {
         await router.push({ name: 'POS' })
@@ -37,7 +54,8 @@ export function useAuth() {
 
       return { success: true }
     } catch (err) {
-      error.value = 'Terjadi kesalahan. Coba lagi nanti.'
+      console.error('[DesaPOS] Unexpected error saat login:', err)
+      error.value = 'Terjadi kesalahan tidak terduga. Coba lagi nanti.'
       return { success: false }
     } finally {
       loading.value = false
@@ -47,26 +65,11 @@ export function useAuth() {
   async function logout() {
     loading.value = true
     try {
-      await supabase.auth.signOut()
-    } finally {
       authStore.clearUser()
       await router.push({ name: 'Login' })
+    } finally {
       loading.value = false
     }
-  }
-
-  function mapErrorMessage(message) {
-    if (!message) return 'Terjadi kesalahan tidak diketahui.'
-    if (message.includes('Invalid login credentials')) {
-      return 'Email atau password salah. Periksa kembali.'
-    }
-    if (message.includes('Email not confirmed')) {
-      return 'Email belum diverifikasi. Cek inbox email Anda.'
-    }
-    if (message.includes('Too many requests')) {
-      return 'Terlalu banyak percobaan login. Tunggu beberapa menit.'
-    }
-    return message
   }
 
   return { login, logout, loading, error }
