@@ -17,7 +17,7 @@ export function useAuth() {
     try {
       const { data, error: dbError } = await supabase
         .from('users')
-        .select('id, name, role, pin')
+        .select('id, name, role, pin, is_active')
         .eq('name', name.trim())
         .maybeSingle()
 
@@ -32,6 +32,11 @@ export function useAuth() {
         return { success: false }
       }
 
+      if (!data.is_active) {
+        error.value = 'Akun Anda telah dinonaktifkan. Hubungi Admin.'
+        return { success: false }
+      }
+
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
         error.value = 'Nama pengguna atau PIN salah. Periksa kembali.'
@@ -43,13 +48,13 @@ export function useAuth() {
         return { success: false }
       }
 
-      const { pin: _hash, ...safeUser } = data
+      const { pin: _pin, is_active: _active, ...safeUser } = data
       authStore.setUser(safeUser)
 
       if (data.role === 'ADMIN') {
-        await router.push({ name: 'Dashboard' })
+        await router.push({ name: 'Inventory' })
       } else {
-        await router.push({ name: 'POS' })
+        await router.push({ name: 'OpenShift' })
       }
 
       return { success: true }

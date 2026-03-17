@@ -73,13 +73,6 @@ async function handleSubmit() {
         </p>
       </div>
 
-      <!-- Notch greeting card -->
-      <div class="relative -mt-5 px-8">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4 text-center">
-          <p class="text-gray-600 text-sm font-medium">Selamat datang! Silakan masuk untuk melanjutkan.</p>
-        </div>
-      </div>
-
       <!-- Form Body -->
       <div class="px-8 pt-6 pb-8">
         <form id="login-form" @submit.prevent="handleSubmit" class="space-y-5" novalidate>
@@ -153,7 +146,7 @@ async function handleSubmit() {
               :disabled="loading"
               full-width
             >
-              <span v-if="!loading">🔑 Masuk ke DesaPOS</span>
+              <span v-if="!loading">Masuk ke DesaPOS</span>
               <span v-else>Memverifikasi...</span>
             </BaseButton>
           </div>

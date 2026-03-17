@@ -1,0 +1,98 @@
+import { ref } from 'vue'
+import { supabase } from '@/services/supabase'
+import { useShiftStore } from '@/stores/shiftStore'
+import { useAuthStore } from '@/stores/authStore'
+
+export function useShift() {
+  const shiftStore = useShiftStore()
+  const authStore = useAuthStore()
+  const loading = ref(false)
+  const error = ref(null)
+
+  async function checkActiveShift(userId) {
+    const { data, error: dbError } = await supabase
+      .from('shifts')
+      .select('id, user_id, opening_cash, status, opened_at')
+      .eq('user_id', userId)
+      .eq('status', 'OPEN')
+      .maybeSingle()
+
+    if (dbError) {
+      console.error('[DesaPOS] Gagal cek shift aktif:', dbError)
+      return null
+    }
+
+    if (data) {
+      shiftStore.setShift(data)
+    }
+
+    return data
+  }
+
+  async function openShift(openingCash) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data, error: dbError } = await supabase
+        .from('shifts')
+        .insert({
+          user_id: authStore.user.id,
+          opening_cash: openingCash,
+          status: 'OPEN',
+        })
+        .select('id, user_id, opening_cash, status, opened_at')
+        .single()
+
+      if (dbError) {
+        console.error('[DesaPOS] Gagal buka shift:', dbError)
+        error.value = 'Gagal memulai shift. Coba lagi.'
+        return { success: false }
+      }
+
+      shiftStore.setShift(data)
+      return { success: true, shift: data }
+    } catch (err) {
+      console.error('[DesaPOS] Unexpected error buka shift:', err)
+      error.value = 'Terjadi kesalahan tidak terduga.'
+      return { success: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function closeShift(shiftId, closingCash, expectedCash, notes = '') {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { error: dbError } = await supabase
+        .from('shifts')
+        .update({
+          closing_cash: closingCash,
+          expected_cash: expectedCash,
+          notes,
+          status: 'CLOSED',
+          closed_at: new Date().toISOString(),
+        })
+        .eq('id', shiftId)
+
+      if (dbError) {
+        console.error('[DesaPOS] Gagal tutup shift:', dbError)
+        error.value = 'Gagal menutup shift. Coba lagi.'
+        return { success: false }
+      }
+
+      shiftStore.clearShift()
+      return { success: true }
+    } catch (err) {
+      console.error('[DesaPOS] Unexpected error tutup shift:', err)
+      error.value = 'Terjadi kesalahan tidak terduga.'
+      return { success: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { checkActiveShift, openShift, closeShift, loading, error }
+}

@@ -2,10 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useCartStore = defineStore('cart', () => {
-  // State
-  const items = ref([]) // { product_id, name, price, qty, image_url }
+  const items = ref([])
 
-  // Getters
   const totalItems = computed(() =>
     items.value.reduce((sum, item) => sum + item.qty, 0)
   )
@@ -14,7 +12,6 @@ export const useCartStore = defineStore('cart', () => {
     items.value.reduce((sum, item) => sum + item.price * item.qty, 0)
   )
 
-  // Actions
   function addItem(product) {
     const existing = items.value.find((i) => i.product_id === product.id)
     if (existing) {
@@ -24,7 +21,7 @@ export const useCartStore = defineStore('cart', () => {
         product_id: product.id,
         name: product.name,
         price: product.price,
-        price_at_sale: product.price, // penting: tangkap harga saat ini
+        price_at_sale: product.price,
         qty: 1,
         image_url: product.image_url || null,
       })

@@ -9,16 +9,38 @@ const routes = [
     meta: { requiresGuest: true },
   },
   {
+    path: '/open-shift',
+    name: 'OpenShift',
+    component: () => import('@/pages/OpenShiftPage.vue'),
+    meta: { requiresAuth: true, roles: ['KASIR'] },
+  },
+  {
     path: '/pos',
     name: 'POS',
-    component: () => import('@/pages/PosRegisterPage.vue'),
-    meta: { requiresAuth: true, roles: ['KASIR', 'ADMIN'] },
+    component: () => import('@/pages/PosTrxPage.vue'),
+    meta: { requiresAuth: true, roles: ['KASIR'] },
   },
   {
     path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/pages/DashboardPage.vue'),
+    redirect: '/inventory'
+  },
+  {
+    path: '/inventory',
+    name: 'Inventory',
+    component: () => import('@/pages/InventoryPage.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN'] },
+  },
+  {
+    path: '/analytics',
+    name: 'Analytics',
+    component: () => import('@/pages/AnalyticsPage.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] },
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    component: () => import('@/pages/UsersPage.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] }
   },
   {
     path: '/',
@@ -35,29 +57,23 @@ const router = createRouter({
   routes,
 })
 
-// Navigation Guard: Role-Based Access Control
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // Halaman yang butuh login
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
       return next({ name: 'Login' })
     }
-
-    // Cek role access
     if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
-      // Redirect ke halaman sesuai role
-      if (authStore.isAdmin) return next({ name: 'Dashboard' })
-      if (authStore.isKasir) return next({ name: 'POS' })
+      if (authStore.isAdmin) return next({ name: 'Inventory' })
+      if (authStore.isKasir) return next({ name: 'OpenShift' })
       return next({ name: 'Login' })
     }
   }
 
-  // Halaman yang hanya untuk tamu (belum login)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    if (authStore.isAdmin) return next({ name: 'Dashboard' })
-    return next({ name: 'POS' })
+    if (authStore.isAdmin) return next({ name: 'Inventory' })
+    return next({ name: 'OpenShift' })
   }
 
   next()
