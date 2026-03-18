@@ -1,19 +1,18 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { useInventory } from '@/composables/useInventory'
 
 const props = defineProps({
   isOpen: Boolean,
   product: {
     type: Object,
     default: null
-  }
+  },
+  isLoading: Boolean
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'confirm'])
 
-const invStore = useInventory()
 const stockToAdd = ref(1)
 
 watch(() => props.isOpen, (val) => {
@@ -22,14 +21,9 @@ watch(() => props.isOpen, (val) => {
   }
 })
 
-async function submitAddStock() {
-  if (!props.product) return
-  const res = await invStore.addStock(props.product.id, stockToAdd.value, 'Restock Manually dari Dashboard')
-  if (res.success) {
-    emit('close')
-  } else {
-    alert(invStore.error.value)
-  }
+function submitAddStock() {
+  if (!props.product || stockToAdd.value < 1) return
+  emit('confirm', { productId: props.product.id, qty: stockToAdd.value })
 }
 </script>
 
@@ -70,8 +64,8 @@ async function submitAddStock() {
                 </div>
                 
                 <div class="pt-2 flex justify-end gap-3 text-sm">
-                  <button type="button" @click="$emit('close')" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-md transition-colors focus:outline-none border border-transparent">Batal</button>
-                  <button @click="submitAddStock" :disabled="invStore.loading.value || stockToAdd < 1" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md disabled:opacity-50 transition-colors focus:outline-none border border-transparent">
+                  <button @click="$emit('close')" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-md transition-colors focus:outline-none border border-transparent">Batal</button>
+                  <button @click="submitAddStock" :disabled="isLoading || stockToAdd < 1" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md disabled:opacity-50 transition-colors focus:outline-none border border-transparent">
                     Konfirmasi
                   </button>
                 </div>

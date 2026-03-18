@@ -14,3 +14,8 @@ export function formatDate(date) {
     year: 'numeric',
   }).format(new Date(date))
 }
+
+export function formatTime(time) {
+  if (!time) return 'Sekarang'
+  return new Date(time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+}

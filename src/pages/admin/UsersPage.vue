@@ -9,11 +9,40 @@ import ToggleUserModal from '@/components/users/ToggleUserModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { users, loading, error, fetchUsers, toggleUserStatus } = useUsers()
+const { users, loading, error, fetchUsers, toggleUserStatus, deleteUser } = useUsers()
 
+const searchQuery = ref('')
 const isToggleModalOpen = ref(false)
 const userToToggle = ref(null)
 const isToggling = ref(false)
+
+const currentPage = ref(1)
+const itemsPerPage = ref(20)
+const itemsPerPageOptions = [10, 20, 30, 50]
+
+const filteredUsers = computed(() => {
+  if (!users.value?.length) return []
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return users.value
+  return users.value.filter(u =>
+    u.name.toLowerCase().includes(q) ||
+    (u.employee_number && u.employee_number.toLowerCase().includes(q)) ||
+    u.role.toLowerCase().includes(q)
+  )
+})
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredUsers.value.length / itemsPerPage.value))
+})
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredUsers.value.slice(start, start + itemsPerPage.value)
+})
+
+function prevPage() { if (currentPage.value > 1) currentPage.value-- }
+function nextPage() { if (currentPage.value < totalPages.value) currentPage.value++ }
+function handleItemsPerPageChange() { currentPage.value = 1 }
 
 function openToggleModal(user) {
   userToToggle.value = user
@@ -30,36 +59,12 @@ async function handleConfirmToggle(user) {
   }
 }
 
-const currentPage = ref(1)
-const itemsPerPage = ref(20)
-const itemsPerPageOptions = [10, 20, 30, 50]
-
-const totalPages = computed(() => {
-  if (!users.value) return 1
-  return Math.max(1, Math.ceil(users.value.length / itemsPerPage.value))
-})
-
-const paginatedUsers = computed(() => {
-  if (!users.value) return []
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return users.value.slice(start, end)
-})
-
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
+async function handleDelete(user) {
+  if (!confirm(`Apakah Anda yakin ingin menghapus pengguna "${user.name}"? Tindakan ini tidak dapat dibatalkan.`)) return
+  const success = await deleteUser(user.id)
+  if (!success) {
+    alert(error.value || 'Gagal menghapus pengguna.')
   }
-}
-
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-function handleItemsPerPageChange() {
-  currentPage.value = 1
 }
 
 onMounted(async () => {
@@ -69,17 +74,26 @@ onMounted(async () => {
     return
   }
   await fetchUsers()
-  currentPage.value = 1
 })
 </script>
 
 <template>
   <AdminLayout title="Manajemen Pengguna" subtitle="Daftar Kasir & Admin BUMDes" activeTab="users">
     
-    <div class="mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-lg font-bold text-gray-900">Pengguna Sistem</h2>
         <p class="text-sm text-gray-500">Daftar akun pengawas (Admin) dan pelayan masyarakat (Kasir).</p>
+      </div>
+      <div class="relative w-full sm:max-w-xs">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input 
+          v-model="searchQuery"
+          @input="currentPage = 1"
+          type="text" 
+          placeholder="Cari nama, no. pegawai, atau role..."
+          class="w-full bg-white border border-gray-300 focus:border-green-600 rounded-md pl-9 pr-3 py-2 text-sm font-medium focus:outline-none transition-colors placeholder-gray-400"
+        >
       </div>
     </div>
 
@@ -100,7 +114,7 @@ onMounted(async () => {
               <th class="px-6 py-4 border-l border-gray-100">Peran Pribadi</th>
               <th class="px-6 py-4 border-l border-gray-100">Tgl Terdaftar</th>
               <th class="px-6 py-4 text-center border-l border-gray-100 w-36">Status Akun</th>
-              <th class="px-6 py-4 text-center border-l border-gray-100 w-32">Aksi</th>
+              <th class="px-6 py-4 text-center border-l border-gray-100 w-44">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -109,30 +123,33 @@ onMounted(async () => {
                 Mengunduh data karyawan...
               </td>
             </tr>
-            <tr v-else-if="users.length === 0">
+            <tr v-else-if="filteredUsers.length === 0">
               <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-medium">
-                Belum ada pengguna yang terdaftar.
+                {{ searchQuery ? 'Tidak ditemukan pengguna yang cocok.' : 'Belum ada pengguna yang terdaftar.' }}
               </td>
             </tr>
             <tr 
               v-else
               v-for="(user, idx) in paginatedUsers" 
               :key="user.id"
-              class="hover:bg-gray-50/80 transition-colors"
+              class="hover:bg-gray-50/80 transition-colors group"
             >
               <td class="px-6 py-4 text-center text-gray-400 font-bold border-r border-gray-100">
                 {{ (currentPage - 1) * itemsPerPage + idx + 1 }}
               </td>
-              <td class="px-6 py-4 font-bold text-gray-900 border-r border-gray-100">
-                <div class="flex items-center gap-3">
-                  <div v-if="user.img_url" class="w-8 h-8 rounded-full border border-gray-200 overflow-hidden shrink-0">
+              <td class="px-6 py-4 font-semibold text-gray-900 border-r border-gray-100">
+                <button 
+                  @click="router.push(`/users/${user.id}`)"
+                  class="flex items-center gap-3 text-left w-full hover:bg-gray-50 focus:outline-none p-1.5 -ml-1.5 rounded-lg transition-colors group"
+                >
+                  <div v-if="user.img_url" class="w-8 h-8 rounded-full border border-gray-200 overflow-hidden shrink-0 group-hover:border-green-300 transition-colors">
                     <img :src="user.img_url" alt="Avatar" class="w-full h-full object-cover" />
                   </div>
-                  <div v-else class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm border border-blue-200 shrink-0">
+                  <div v-else class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-sm border border-blue-200 shrink-0 group-hover:bg-blue-200 transition-colors">
                     {{ user.name.charAt(0).toUpperCase() }}
                   </div>
-                  {{ user.name }}
-                </div>
+                  <span class="group-hover:text-green-700 transition-colors">{{ user.name }}</span>
+                </button>
               </td>
               <td class="px-6 py-4 font-mono text-sm text-gray-600 border-l border-gray-100">
                 {{ user.employee_number || '-' }}
@@ -158,17 +175,25 @@ onMounted(async () => {
                 </span>
               </td>
               <td class="px-6 py-4 text-center border-l border-gray-100">
-                <button 
-                  v-if="user.role === 'KASIR'"
-                  @click="openToggleModal(user)"
-                  :disabled="isToggling"
-                  class="px-3 py-1.5 rounded-md text-xs font-bold border transition-colors focus:outline-none w-full flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  :class="user.is_active ? 'bg-white text-red-600 border-red-200 hover:bg-red-50' : 'bg-white text-green-600 border-green-200 hover:bg-green-50'"
-                >
-                  <svg v-if="user.is_active" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                  <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  {{ user.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                </button>
+                <div v-if="user.role === 'KASIR'" class="flex items-center justify-center gap-2">
+                  <button 
+                    @click="openToggleModal(user)"
+                    :disabled="isToggling"
+                    class="px-2.5 py-1.5 rounded-md text-xs font-bold border transition-colors focus:outline-none flex items-center gap-1.5 disabled:opacity-50"
+                    :class="user.is_active ? 'bg-white text-red-600 border-red-200 hover:bg-red-50' : 'bg-white text-green-600 border-green-200 hover:bg-green-50'"
+                  >
+                    <svg v-if="user.is_active" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    {{ user.is_active ? 'Blokir' : 'Aktifkan' }}
+                  </button>
+                  <button 
+                    @click="handleDelete(user)"
+                    title="Hapus Pengguna"
+                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md border border-transparent hover:border-red-200 focus:outline-none transition-colors"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -176,9 +201,8 @@ onMounted(async () => {
       </div>
 
       <!-- Pagination Footer -->
-      <div v-if="users.length > 0" class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div v-if="filteredUsers.length > 0" class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        <!-- Pilihan Data per Halaman -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <span class="font-medium">Tampilkan:</span>
           <select 
@@ -193,13 +217,12 @@ onMounted(async () => {
           <span class="font-medium text-gray-500">data</span>
         </div>
 
-        <!-- Kontrol Pindah Halaman -->
         <div class="flex items-center gap-4">
           <span class="text-sm text-gray-600 font-medium">
             Halaman <span class="font-bold text-gray-900">{{ currentPage }}</span> dari <span class="font-bold text-gray-900">{{ totalPages }}</span>
-            <span class="text-gray-400 ml-1">({{ users.length }} total pengguna)</span>
+            <span class="text-gray-400 ml-1">({{ filteredUsers.length }} pengguna)</span>
           </span>
-          <div class="inline-flex rounded-md shadow-sm">
+          <div class="inline-flex rounded-md">
             <button 
               @click="prevPage" 
               :disabled="currentPage === 1"
@@ -232,3 +255,4 @@ onMounted(async () => {
 
   </AdminLayout>
 </template>
+

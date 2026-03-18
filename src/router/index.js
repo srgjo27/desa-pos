@@ -11,13 +11,13 @@ const routes = [
   {
     path: '/open-shift',
     name: 'OpenShift',
-    component: () => import('@/pages/OpenShiftPage.vue'),
+    component: () => import('@/pages/kasir/OpenShiftPage.vue'),
     meta: { requiresAuth: true, roles: ['KASIR'] },
   },
   {
     path: '/pos',
     name: 'POS',
-    component: () => import('@/pages/PosTrxPage.vue'),
+    component: () => import('@/pages/kasir/PosTrxPage.vue'),
     meta: { requiresAuth: true, roles: ['KASIR'] },
   },
   {
@@ -27,19 +27,31 @@ const routes = [
   {
     path: '/inventory',
     name: 'Inventory',
-    component: () => import('@/pages/InventoryPage.vue'),
+    component: () => import('@/pages/admin/InventoryPage.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN'] },
   },
   {
     path: '/analytics',
     name: 'Analytics',
-    component: () => import('@/pages/AnalyticsPage.vue'),
+    component: () => import('@/pages/admin/AnalyticsPage.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN'] },
   },
   {
     path: '/users',
     name: 'Users',
-    component: () => import('@/pages/UsersPage.vue'),
+    component: () => import('@/pages/admin/UsersPage.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] }
+  },
+  {
+    path: '/users/:id',
+    name: 'UserDetail',
+    component: () => import('@/pages/admin/UserDetailPage.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] }
+  },
+  {
+    path: '/shifts',
+    name: 'Shifts',
+    component: () => import('@/pages/admin/ShiftsPage.vue'),
     meta: { requiresAuth: true, roles: ['ADMIN'] }
   },
   {

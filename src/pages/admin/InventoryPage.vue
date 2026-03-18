@@ -55,6 +55,15 @@ async function handleDelete(product) {
     }
   }
 }
+
+async function handleAddStock({ productId, qty }) {
+  const res = await invStore.addStock(productId, qty, 'Restock manual via Dashboard')
+  if (res.success) {
+    isModalStockOpen.value = false
+  } else {
+    alert(invStore.error.value)
+  }
+}
 </script>
 
 <template>
@@ -175,7 +184,9 @@ async function handleDelete(product) {
     <AddStockModal 
       :isOpen="isModalStockOpen" 
       :product="selectedProduct" 
+      :isLoading="invStore.loading.value"
       @close="isModalStockOpen = false" 
+      @confirm="handleAddStock"
     />
 
   </AdminLayout>

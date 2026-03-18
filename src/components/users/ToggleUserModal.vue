@@ -1,6 +1,5 @@
 <script setup>
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { ref } from 'vue'
 
 const props = defineProps({
   isOpen: Boolean,

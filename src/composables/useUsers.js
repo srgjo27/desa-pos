@@ -61,11 +61,63 @@ export function useUsers() {
     }
   }
 
+  async function getUserById(userId) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data, error: dbError } = await supabase
+        .from('users')
+        .select('id, name, role, is_active, employee_number, img_url, phone, address, created_at')
+        .eq('id', userId)
+        .single()
+
+      if (dbError) {
+        console.error('[DesaPOS] Error fetching user detail:', dbError)
+        error.value = 'Gagal memuat profil pengguna.'
+        return null
+      }
+      return data
+    } catch (err) {
+      console.error('[DesaPOS] Unexpected error fetching user detail:', err)
+      error.value = 'Terjadi kesalahan sistem.'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteUser(userId) {
+    error.value = null
+
+    try {
+      const { error: dbError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId)
+
+      if (dbError) {
+        console.error('[DesaPOS] Error deleting user:', dbError)
+        error.value = 'Gagal menghapus pengguna.'
+        return false
+      }
+
+      users.value = users.value.filter(u => u.id !== userId)
+      return true
+    } catch (err) {
+      console.error('[DesaPOS] Unexpected error deleting user:', err)
+      error.value = 'Terjadi kesalahan sistem saat menghapus pengguna.'
+      return false
+    }
+  }
+
   return {
     users,
     loading,
     error,
     fetchUsers,
-    toggleUserStatus
+    toggleUserStatus,
+    getUserById,
+    deleteUser
   }
 }
