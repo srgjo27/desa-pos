@@ -50,34 +50,32 @@ async function handleSubmit() {
 
 <template>
   <AuthLayout>
-    <!-- Card Putih Bersih -->
-    <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
 
-      <!-- Top Banner / Header berwarna -->
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 pt-10 pb-12 text-center relative overflow-hidden">
-        <!-- Dekorasi lingkaran di dalam banner -->
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-8 pt-10 pb-12 text-center relative overflow-hidden">
         <div class="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
         <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-white/10 rounded-full" />
 
-        <!-- Logo Icon -->
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-md mb-4 relative z-10">
-          <svg class="w-9 h-9 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Logo -->
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white mb-4 relative z-10">
+          <svg class="w-9 h-9 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             />
           </svg>
         </div>
         <h1 class="text-3xl font-extrabold text-white relative z-10 tracking-tight">DesaPOS</h1>
-        <p class="text-blue-100 text-sm mt-1.5 relative z-10 font-medium">
+        <p class="text-green-100 text-sm mt-1.5 relative z-10 font-medium">
           Sistem Kasir BUMDes Digital
         </p>
       </div>
 
-      <!-- Form Body -->
+      <!-- Form -->
       <div class="px-8 pt-6 pb-8">
         <form id="login-form" @submit.prevent="handleSubmit" class="space-y-5" novalidate>
 
-          <!-- Global Error Alert -->
+          <!-- Error Alert -->
           <div
             v-if="error"
             class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700"
@@ -89,7 +87,7 @@ async function handleSubmit() {
             <span>{{ error }}</span>
           </div>
 
-          <!-- Name Field -->
+          <!-- Name -->
           <BaseInput
             id="login-name"
             v-model="form.name"
@@ -100,7 +98,7 @@ async function handleSubmit() {
             :error="formErrors.name"
           />
 
-          <!-- PIN Field -->
+          <!-- PIN -->
           <BaseInput
             id="login-pin"
             v-model="form.pin"
@@ -114,11 +112,10 @@ async function handleSubmit() {
               <button
                 type="button"
                 id="toggle-pin"
-                class="text-gray-400 hover:text-blue-600 transition-colors p-0.5 focus:outline-none"
+                class="text-gray-400 hover:text-green-600 transition-colors p-0.5 focus:outline-none"
                 :aria-label="showPin ? 'Sembunyikan PIN' : 'Tampilkan PIN'"
                 @click="showPin = !showPin"
               >
-                <!-- Eye icon -->
                 <svg v-if="!showPin" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
@@ -127,7 +124,6 @@ async function handleSubmit() {
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
-                <!-- Eye-off icon -->
                 <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
@@ -137,7 +133,7 @@ async function handleSubmit() {
             </template>
           </BaseInput>
 
-          <!-- Submit Button -->
+          <!-- Submit -->
           <div class="pt-2">
             <BaseButton
               id="login-submit"
@@ -158,7 +154,7 @@ async function handleSubmit() {
             Butuh bantuan?
             <a
               href="mailto:admin@bumdes.desa.id"
-              class="text-blue-600 hover:text-blue-700 transition-colors font-semibold ml-1 underline underline-offset-2"
+              class="text-green-600 hover:text-green-700 transition-colors font-semibold ml-1 underline underline-offset-2"
             >
               Hubungi Admin
             </a>

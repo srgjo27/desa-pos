@@ -30,10 +30,10 @@ defineProps({
     :disabled="disabled || loading"
     :class="[
       'inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm px-5 py-3',
-      'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
+      'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white',
       'disabled:opacity-50 disabled:cursor-not-allowed',
       fullWidth && 'w-full',
-      variant === 'primary' && 'bg-blue-600 hover:bg-blue-500 text-white focus:ring-blue-500',
+      variant === 'primary' && 'bg-green-600 hover:bg-green-500 text-white focus:ring-green-500',
       variant === 'secondary' && 'bg-gray-700 hover:bg-gray-600 text-gray-100 focus:ring-gray-500',
       variant === 'danger' && 'bg-red-600 hover:bg-red-500 text-white focus:ring-red-500',
       variant === 'ghost' && 'bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white focus:ring-gray-600',

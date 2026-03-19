@@ -39,7 +39,7 @@ export function useAuth() {
 
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
-        error.value = 'Nama pengguna atau PIN salah. Periksa kembali.'
+        error.value = 'PIN salah. Periksa kembali.'
         return { success: false }
       }
 
