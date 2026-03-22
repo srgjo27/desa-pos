@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import bcrypt from 'bcryptjs'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
+import { DesaPOSError, ERROR_CODES, logError, getErrorMessage } from '@/services/errorHandler'
 
 export function useAuth() {
   const router = useRouter()
@@ -22,30 +23,40 @@ export function useAuth() {
         .maybeSingle()
 
       if (dbError) {
-        console.error('[DesaPOS] DB error saat login:', dbError)
-        error.value = 'Terjadi kesalahan sistem. Coba lagi nanti.'
-        return { success: false }
+        throw new DesaPOSError(
+          ERROR_CODES.DB_ERROR,
+          'Gagal mengakses data pengguna. Periksa koneksi internet Anda.',
+          dbError
+        )
       }
 
       if (!data) {
-        error.value = 'Nama pengguna atau PIN salah. Periksa kembali.'
-        return { success: false }
+        throw new DesaPOSError(
+          ERROR_CODES.AUTH_INVALID_PIN,
+          'Nama pengguna atau PIN salah. Periksa kembali.'
+        )
       }
 
       if (!data.is_active) {
-        error.value = 'Akun Anda telah dinonaktifkan. Hubungi Admin.'
-        return { success: false }
+        throw new DesaPOSError(
+          ERROR_CODES.AUTH_USER_INACTIVE,
+          'Akun Anda telah dinonaktifkan. Hubungi Admin.'
+        )
       }
 
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
-        error.value = 'PIN salah. Periksa kembali.'
-        return { success: false }
+        throw new DesaPOSError(
+          ERROR_CODES.AUTH_INVALID_PIN,
+          'PIN salah. Periksa kembali.'
+        )
       }
 
       if (!['KASIR', 'ADMIN'].includes(data.role)) {
-        error.value = 'Akun Anda belum dikonfigurasi. Hubungi Admin.'
-        return { success: false }
+        throw new DesaPOSError(
+          ERROR_CODES.AUTH_UNAUTHORIZED,
+          'Akun Anda belum dikonfigurasi dengan benar. Hubungi Admin.'
+        )
       }
 
       const { pin: _pin, is_active: _active, ...safeUser } = data
@@ -58,9 +69,16 @@ export function useAuth() {
       }
 
       return { success: true }
+
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error saat login:', err)
-      error.value = 'Terjadi kesalahan tidak terduga. Coba lagi nanti.'
+      if (err instanceof DesaPOSError) {
+        error.value = getErrorMessage(err.code)
+        logError(err, { context: 'login', username: name })
+      } else {
+        console.error('[DesaPOS] Unexpected error saat login:', err)
+        error.value = 'Terjadi kesalahan tidak terduga. Coba lagi nanti.'
+        logError(err, { context: 'login', username: name })
+      }
       return { success: false }
     } finally {
       loading.value = false
@@ -72,6 +90,10 @@ export function useAuth() {
     try {
       authStore.clearUser()
       await router.push({ name: 'Login' })
+      return { success: true }
+    } catch (err) {
+      logError(err, { context: 'logout' })
+      return { success: false }
     } finally {
       loading.value = false
     }

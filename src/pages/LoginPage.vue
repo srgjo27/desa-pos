@@ -53,7 +53,7 @@ async function handleSubmit() {
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
 
       <!-- Header -->
-      <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-8 pt-10 pb-12 text-center relative overflow-hidden">
+      <div class="bg-linear-to-r from-green-600 to-emerald-600 px-8 pt-10 pb-12 text-center relative overflow-hidden">
         <div class="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
         <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-white/10 rounded-full" />
 

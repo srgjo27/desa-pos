@@ -40,17 +40,4 @@ Sistem ini menggunakan arsitektur *Client-Server* modern:
 * **Vue SPA (Client):** Menangani semua UI, validasi *form*, dan *state* keranjang kasir. Disajikan via Vercel (CDN).
 * **Supabase (BaaS):** Bertindak sebagai penyedia REST API. Vue.js akan melakukan GET/POST *request* ke Supabase. Supabase menangani keamanan data (Row Level Security).
 
-### 5. Skema Database (PostgreSQL)
-
-Tabel dirancang agar relasional dan menjaga integritas data keuangan:
-
-| Tabel | Kolom Penting | Relasi |
-| --- | --- | --- |
-| **users** | `id`, `name`, `role` (KASIR, ADMIN), `pin` | Karyawan BUMDes |
-| **products** | `id`, `sku`, `name`, `price`, `stock`, `image_url` | Master data barang |
-| **sales** | `id`, `user_id`, `total_amount`, `payment_method`, `created_at` | Header nota transaksi |
-| **sale_items** | `id`, `sale_id`, `product_id`, `qty`, `price_at_sale` | Detail barang yang dibeli pada satu nota |
-
-*(Catatan: `price_at_sale` sangat penting! Harga barang bisa berubah besok, tapi harga di nota masa lalu tidak boleh berubah).*
-
 ---

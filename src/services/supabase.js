@@ -3,25 +3,56 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const isConfigured =
-  supabaseUrl &&
-  supabaseUrl !== 'YOUR_SUPABASE_URL' &&
-  supabaseUrl.startsWith('http') &&
-  supabaseAnonKey &&
-  supabaseAnonKey !== 'YOUR_SUPABASE_ANON_KEY'
+function validateSupabaseEnv() {
+  const errors = []
 
-if (!isConfigured) {
-  console.warn(
-    '[DesaPOS] ⚠️  Supabase belum dikonfigurasi.\n' +
-    'Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY di file .env\n' +
-    'Aplikasi berjalan dalam mode demo — login tidak akan berfungsi.'
-  )
+  if (!supabaseUrl) {
+    errors.push('VITE_SUPABASE_URL tidak ditemukan dalam .env')
+  } else if (supabaseUrl === 'YOUR_SUPABASE_URL') {
+    errors.push('VITE_SUPABASE_URL masih menggunakan placeholder (YOUR_SUPABASE_URL)')
+  } else if (!supabaseUrl.startsWith('https://')) {
+    errors.push('VITE_SUPABASE_URL harus dimulai dengan https://')
+  }
+
+  if (!supabaseAnonKey) {
+    errors.push('VITE_SUPABASE_ANON_KEY tidak ditemukan dalam .env')
+  } else if (supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY') {
+    errors.push('VITE_SUPABASE_ANON_KEY masih menggunakan placeholder')
+  } else if (supabaseAnonKey.length < 20) {
+    errors.push('VITE_SUPABASE_ANON_KEY tampak tidak valid (terlalu pendek)')
+  }
+
+  if (errors.length > 0) {
+    return {
+      isValid: false,
+      errors,
+      message: `Konfigurasi Supabase Tidak Valid:\n${errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}\n\nLangkah:\n1. Buka https://app.supabase.com/project/[project-id]/settings/api\n2. Copy 'URL' ke VITE_SUPABASE_URL\n3. Copy 'anon public' ke VITE_SUPABASE_ANON_KEY\n4. Paste ke file .env`
+    }
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    message: 'Konfigurasi Supabase valid'
+  }
 }
 
-// Gunakan placeholder URL yang valid agar Supabase client tidak crash
-// ketika env vars belum diisi (development awal / demo mode)
-const resolvedUrl = isConfigured ? supabaseUrl : 'https://placeholder.supabase.co'
+const validation = validateSupabaseEnv()
+const isConfigured = validation.isValid
+
+if (!isConfigured) {
+  console.error('[DesaPOS] ' + validation.message)
+  if (typeof window !== 'undefined') {
+    console.warn(
+      '[DesaPOS] Aplikasi akan berjalan dalam mode demo tanpa Supabase.\n' +
+      'Fitur login dan data persistence tidak akan berfungsi.'
+    )
+  }
+}
+
+const resolvedUrl = isConfigured ? supabaseUrl : 'https://supabase.com/'
 const resolvedKey = isConfigured ? supabaseAnonKey : 'placeholder-anon-key'
 
+export { isConfigured, validateSupabaseEnv }
 export const supabase = createClient(resolvedUrl, resolvedKey)
 export const isSupabaseConfigured = isConfigured
