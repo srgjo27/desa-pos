@@ -30,6 +30,8 @@ export const ERROR_CODES = {
   INVENTORY_DUPLICATE_SKU: 'INVENTORY_DUPLICATE_SKU',
   INVENTORY_PRODUCT_NOT_FOUND: 'INVENTORY_PRODUCT_NOT_FOUND',
   
+  UPLOAD_ERROR: 'UPLOAD_ERROR',
+  
   UNKNOWN: 'UNKNOWN'
 }
 
@@ -53,12 +55,6 @@ export function logError(error, context = {}) {
   }
   
   console.error('[DesaPOS Error]', errorLog)
-  
-  // TODO: Send to Sentry atau monitoring service di production
-  // sentry.captureException(error, { tags: context })
-  
-  // TODO: Store ke backend untuk error tracking
-  // db.errorLogs.add(errorLog)
 }
 
 export function getErrorMessage(code) {
@@ -76,6 +72,7 @@ export function getErrorMessage(code) {
     [ERROR_CODES.VALIDATION_ERROR]: 'Data tidak valid. Periksa kembali input Anda.',
     [ERROR_CODES.DB_ERROR]: 'Terjadi kesalahan pada sistem. Coba lagi nanti.',
     [ERROR_CODES.DB_NOT_FOUND]: 'Data yang dicari tidak ditemukan.',
+    [ERROR_CODES.UPLOAD_ERROR]: 'Gagal mengupload file. Periksa koneksi dan ukuran file Anda.'
   }
   
   return messages[code] || 'Terjadi kesalahan yang tidak terduga.'
@@ -87,7 +84,7 @@ export function withErrorHandler(asyncFn) {
       return await asyncFn(...args)
     } catch (err) {
       logError(err, { function: asyncFn.name, args })
-      throw err
+      return { success: false }
     }
   }
 }

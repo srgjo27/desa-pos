@@ -40,7 +40,6 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
-          // Cache API responses dengan network-first strategy
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/,
             handler: 'NetworkFirst',
@@ -48,12 +47,11 @@ export default defineConfig({
               cacheName: 'supabase-api',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 3600 // 1 hour
+                maxAgeSeconds: 3600
               },
               networkTimeoutSeconds: 5
             }
           },
-          // Cache images dengan cache-first strategy
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
@@ -61,11 +59,10 @@ export default defineConfig({
               cacheName: 'images',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 86400 * 7 // 1 week
+                maxAgeSeconds: 86400 * 7
               }
             }
           },
-          // Cache fonts
           {
             urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/,
             handler: 'CacheFirst',
@@ -73,14 +70,12 @@ export default defineConfig({
               cacheName: 'fonts',
               expiration: {
                 maxEntries: 20,
-                maxAgeSeconds: 86400 * 30 // 1 month
+                maxAgeSeconds: 86400 * 30
               }
             }
           }
         ]
       },
-      // Disable automatic service worker registration di dev
-      // untuk avoid caching issues selama development
       devOptions: {
         enabled: true,
         suppressWarnings: true,

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
+import { logError } from '../services/errorHandler'
 
 export function useInventory() {
   const authStore = useAuthStore()
@@ -19,9 +20,9 @@ export function useInventory() {
         .order('nilai_inventaris', { ascending: false })
 
       if (err) throw err
+
       products.value = data || []
     } catch (err) {
-      console.error('[Inventory] Fetch error:', err)
       error.value = 'Gagal mengambil data produk: ' + err.message
     } finally {
       loading.value = false
@@ -32,7 +33,7 @@ export function useInventory() {
     loading.value = true
     error.value = null
     try {
-      if (!authStore.user?.id) throw new Error('Akses ditolak. Sesi tidak valid.')
+      if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
 
       const { data: newProd, error: insertErr } = await supabase
         .from('products')
@@ -42,10 +43,7 @@ export function useInventory() {
         .select()
         .single()
 
-      if (insertErr) {
-        if (insertErr.code === '23505') throw new Error('SKU sudah digunakan oleh produk lain.')
-        throw insertErr
-      }
+      if (insertErr) console.error(insertErr)
 
       if (stock > 0) {
         const { error: logErr } = await supabase
@@ -60,14 +58,13 @@ export function useInventory() {
             notes: 'Stok awal penambahan produk baru'
           })
 
-        if (logErr) console.error('[Inventory] Gagal catat log stok awal:', logErr)
+        if (logErr) logError(logErr, { context: 'addProduct - log initial stock' })
       }
 
       products.value.push(newProd)
 
       return { success: true, data: newProd }
     } catch (err) {
-      console.error('[Inventory] Add Product error:', err)
       error.value = err.message
       return { success: false }
     } finally {
@@ -79,11 +76,12 @@ export function useInventory() {
     loading.value = true
     error.value = null
     try {
-      if (!authStore.user?.id) throw new Error('Akses ditolak. Sesi tidak valid.')
-      if (qtyAdded <= 0) throw new Error('Jumlah stok ditambahkan harus lebih dari 0.')
+      if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
+      if (qtyAdded <= 0) error.value = 'Jumlah stok ditambahkan harus lebih dari 0.'
 
       const prodIndex = products.value.findIndex(p => p.id === productId)
-      if (prodIndex === -1) throw new Error('Produk tidak ditemukan di memori.')
+
+      if (prodIndex === -1) error.value = 'Produk tidak ditemukan di memori.'
 
       const stockBefore = products.value[prodIndex].stock
       const stockAfter = stockBefore + qtyAdded
@@ -107,13 +105,12 @@ export function useInventory() {
           notes: notes || 'Restock manual via Dashboard'
         })
 
-      if (logErr) console.error('[Inventory] Gagal catat log restock:', logErr)
+      if (logErr) logError(logErr, { context: 'addStock - log stock addition' })
 
       products.value[prodIndex].stock = stockAfter
 
       return { success: true }
     } catch (err) {
-      console.error('[Inventory] Add Stock error:', err)
       error.value = err.message
       return { success: false }
     } finally {
@@ -130,14 +127,69 @@ export function useInventory() {
         .update({ is_active: false })
         .eq('id', productId)
 
-      if (delErr) throw delErr
+      if (delErr) error.value = delErr
 
       products.value = products.value.filter(p => p.id !== productId)
 
       return { success: true }
     } catch (err) {
-      console.error('[Inventory] Delete Product error:', err)
-      error.value = 'Gagal menghapus produk: ' + err.message
+      error.value = err.message
+      return { success: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function editProduct({ id, sku, name, cost_price, price, stock, image_url, stockBefore }) {
+    loading.value = true
+    error.value = null
+    try {
+      if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
+
+      const stockAfter = stock
+      const stockDifference = stockAfter - stockBefore
+
+      const updatePayload = {
+        name,
+        cost_price,
+        price,
+        stock,
+        image_url: image_url || null
+      }
+      
+      const { data: updatedProd, error: updateErr } = await supabase
+        .from('products')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (updateErr) console.log(updateErr)
+
+      if (stockDifference !== 0) {
+        const { error: logErr } = await supabase
+          .from('stock_logs')
+          .insert({
+            product_id: id,
+            user_id: authStore.user.id,
+            type: 'ADJUSTMENT',
+            qty_change: stockDifference,
+            stock_before: stockBefore,
+            stock_after: stockAfter,
+            notes: `Adjustment stok via Edit Produk (${stockBefore} → ${stockAfter})`
+          })
+
+        if (logErr) logError(logErr, { context: 'editProduct - log stock adjustment' })
+      }
+
+      const prodIndex = products.value.findIndex(p => p.id === id)
+      if (prodIndex !== -1) {
+        products.value[prodIndex] = updatedProd
+      }
+
+      return { success: true, data: updatedProd }
+    } catch (err) {
+      error.value = err.message
       return { success: false }
     } finally {
       loading.value = false
@@ -151,6 +203,7 @@ export function useInventory() {
     fetchProducts,
     addProduct,
     addStock,
-    deleteProduct
+    deleteProduct,
+    editProduct
   }
 }

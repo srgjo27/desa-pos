@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import bcrypt from 'bcryptjs'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
-import { DesaPOSError, ERROR_CODES, logError, getErrorMessage } from '@/services/errorHandler'
+import { ERROR_CODES, getErrorMessage, logError } from '../services/errorHandler'
 
 export function useAuth() {
   const router = useRouter()
@@ -23,40 +23,29 @@ export function useAuth() {
         .maybeSingle()
 
       if (dbError) {
-        throw new DesaPOSError(
-          ERROR_CODES.DB_ERROR,
-          'Gagal mengakses data pengguna. Periksa koneksi internet Anda.',
-          dbError
-        )
+        logError(dbError, { context: 'login' })
+        return { success: false }
       }
 
       if (!data) {
-        throw new DesaPOSError(
-          ERROR_CODES.AUTH_INVALID_PIN,
-          'Nama pengguna atau PIN salah. Periksa kembali.'
-        )
+        error.value = getErrorMessage(ERROR_CODES.DB_NOT_FOUND)
+        return { success: false }
       }
 
       if (!data.is_active) {
-        throw new DesaPOSError(
-          ERROR_CODES.AUTH_USER_INACTIVE,
-          'Akun Anda telah dinonaktifkan. Hubungi Admin.'
-        )
+        error.value = getErrorMessage(ERROR_CODES.AUTH_USER_INACTIVE)
+        return { success: false }
       }
 
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
-        throw new DesaPOSError(
-          ERROR_CODES.AUTH_INVALID_PIN,
-          'PIN salah. Periksa kembali.'
-        )
+        error.value = getErrorMessage(ERROR_CODES.AUTH_INVALID_PIN)
+        return { success: false }
       }
 
       if (!['KASIR', 'ADMIN'].includes(data.role)) {
-        throw new DesaPOSError(
-          ERROR_CODES.AUTH_UNAUTHORIZED,
-          'Akun Anda belum dikonfigurasi dengan benar. Hubungi Admin.'
-        )
+        error.value = getErrorMessage(ERROR_CODES.AUTH_UNAUTHORIZED)
+        return { success: false }
       }
 
       const { pin: _pin, is_active: _active, ...safeUser } = data
@@ -69,16 +58,8 @@ export function useAuth() {
       }
 
       return { success: true }
-
     } catch (err) {
-      if (err instanceof DesaPOSError) {
-        error.value = getErrorMessage(err.code)
-        logError(err, { context: 'login', username: name })
-      } else {
-        console.error('[DesaPOS] Unexpected error saat login:', err)
-        error.value = 'Terjadi kesalahan tidak terduga. Coba lagi nanti.'
-        logError(err, { context: 'login', username: name })
-      }
+      logError(err, { context: 'login' })
       return { success: false }
     } finally {
       loading.value = false
