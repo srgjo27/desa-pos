@@ -196,6 +196,42 @@ export function useInventory() {
     }
   }
 
+  async function updateDiscount(productId, { is_on_discount, discount_price }) {
+    loading.value = true
+    error.value = null
+    try {
+      const updatePayload = {
+        is_on_discount: is_on_discount || false,
+        discount_price: is_on_discount && discount_price ? discount_price : null
+      }
+
+      const { data: updatedProd, error: updateErr } = await supabase
+        .from('products')
+        .update(updatePayload)
+        .eq('id', productId)
+        .select()
+        .single()
+
+      if (updateErr) throw updateErr
+
+      const prodIndex = products.value.findIndex(p => p.id === productId)
+      if (prodIndex !== -1) {
+        products.value[prodIndex] = {
+          ...products.value[prodIndex],
+          is_on_discount: updatedProd.is_on_discount,
+          discount_price: updatedProd.discount_price
+        }
+      }
+
+      return { success: true, data: updatedProd }
+    } catch (err) {
+      error.value = err.message
+      return { success: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     products,
     loading,
@@ -204,6 +240,7 @@ export function useInventory() {
     addProduct,
     addStock,
     deleteProduct,
-    editProduct
+    editProduct,
+    updateDiscount
   }
 }

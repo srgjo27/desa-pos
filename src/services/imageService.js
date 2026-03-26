@@ -41,7 +41,7 @@ export async function uploadProductImage(file, productName = '') {
     const fileName = `${sanitizedName}_${timestamp}.${fileExt}`
     const filePath = `products/${fileName}`
 
-    const { _, error: uploadErr } = await supabase.storage
+    const { data, error: uploadErr } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -49,7 +49,7 @@ export async function uploadProductImage(file, productName = '') {
       })
 
     if (uploadErr) throw 'Gagal mengupload gambar. Coba lagi nanti.'
-    
+
     const { data: publicUrlData } = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(filePath)

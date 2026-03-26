@@ -16,21 +16,16 @@ export function useAnalytics() {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (startDate) {
-        query = query.gte('created_at', `${startDate}T00:00:00.000Z`)
-      }
-      if (endDate) {
-        query = query.lte('created_at', `${endDate}T23:59:59.999Z`)
-      }
+      if (startDate) query = query.gte('created_at', `${startDate}T00:00:00.000Z`)
+      if (endDate) query = query.lte('created_at', `${endDate}T23:59:59.999Z`)
 
       const { data, error: err } = await query
 
-      if (err) throw err
+      if (err) error.value = err
 
       profitData.value = data || []
       return { success: true, data }
     } catch (err) {
-      console.error('Error fetching profit metrics:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {
