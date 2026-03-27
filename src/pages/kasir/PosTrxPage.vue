@@ -156,7 +156,7 @@ function handleCheckoutSuccess(receiptData) {
                 <img :src="product.image_url" alt="Product Image" class="w-full h-full object-cover">
               </div>
               <div v-else>
-                <span class="text-4xl filter drop-shadow-sm">🛍️</span>
+                <span class="text-4xl filter">🛍️</span>
               </div>
             </div>
             <div class="p-4 flex flex-col flex-1">
@@ -247,10 +247,10 @@ function handleCheckoutSuccess(receiptData) {
                 item.qty) }}</span></p>
               <div class="flex items-center gap-4 bg-gray-100 p-1 rounded-lg">
                 <button @click="cartStore.removeItem(item.product_id)"
-                  class="w-8 h-8 flex items-center justify-center bg-white text-gray-600 hover:text-green-600 rounded font-bold shadow-sm focus:outline-none">-</button>
+                  class="w-8 h-8 flex items-center justify-center bg-white text-gray-600 hover:text-green-600 rounded font-bold focus:outline-none">-</button>
                 <span class="w-4 text-center text-sm font-bold text-gray-800">{{ item.qty }}</span>
                 <button @click="cartStore.addItem({ id: item.product_id, name: item.name, price: item.price })"
-                  class="w-8 h-8 flex items-center justify-center bg-white text-gray-600 hover:text-green-600 rounded font-bold shadow-sm focus:outline-none">+</button>
+                  class="w-8 h-8 flex items-center justify-center bg-white text-gray-600 hover:text-green-600 rounded font-bold focus:outline-none">+</button>
               </div>
             </div>
           </div>

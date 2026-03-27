@@ -25,34 +25,20 @@ defineProps({
 </script>
 
 <template>
-  <button
-    :type="type"
-    :disabled="disabled || loading"
-    :class="[
-      'inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm px-5 py-3',
-      'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white',
-      'disabled:opacity-50 disabled:cursor-not-allowed',
-      fullWidth && 'w-full',
-      variant === 'primary' && 'bg-green-600 hover:bg-green-500 text-white focus:ring-green-500',
-      variant === 'secondary' && 'bg-gray-700 hover:bg-gray-600 text-gray-100 focus:ring-gray-500',
-      variant === 'danger' && 'bg-red-600 hover:bg-red-500 text-white focus:ring-red-500',
-      variant === 'ghost' && 'bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white focus:ring-gray-600',
-    ]"
-  >
+  <button :type="type" :disabled="disabled || loading" :class="[
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm px-5 py-3',
+    'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white',
+    'disabled:opacity-50 disabled:cursor-not-allowed',
+    fullWidth && 'w-full',
+    variant === 'primary' && 'bg-green-600 hover:bg-green-500 text-white focus:ring-green-500',
+    variant === 'secondary' && 'bg-gray-700 hover:bg-gray-600 text-gray-100 focus:ring-gray-500',
+    variant === 'danger' && 'bg-red-600 hover:bg-red-500 text-white focus:ring-red-500',
+    variant === 'ghost' && 'bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white focus:ring-gray-600',
+  ]">
     <!-- Loading Spinner -->
-    <svg
-      v-if="loading"
-      class="animate-spin h-4 w-4"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
+    <svg v-if="loading" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
     <slot />
   </button>

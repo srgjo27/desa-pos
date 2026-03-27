@@ -6,6 +6,7 @@ import AdminLayout from '@/layouts/AdminLayout.vue'
 import { useAnalytics } from '@/composables/useAnalytics'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { formatDate, formatTime } from '../../utils/formatCurrency'
+import { generateDailySalesReport } from '@/services/pdfExportService'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -13,6 +14,7 @@ const analytics = useAnalytics()
 
 const startDate = ref('')
 const endDate = ref('')
+const isExporting = ref(false)
 
 onMounted(async () => {
   if (authStore.role !== 'ADMIN') {
@@ -43,6 +45,34 @@ const summaryMetrics = computed(() => {
 
   return { totalOmzet, totalModal, totalLaba }
 })
+
+async function handleExportPDF() {
+  if (analytics.profitData.value.length === 0) {
+    alert('Tidak ada data untuk diexport')
+    return
+  }
+
+  isExporting.value = true
+  try {
+    const startDateObj = new Date(startDate.value)
+    const endDateObj = new Date(endDate.value)
+    const periodText = `${startDateObj.toLocaleDateString('id-ID')} s.d ${endDateObj.toLocaleDateString('id-ID')}`
+
+    await generateDailySalesReport({
+      title: 'Laporan Penjualan Harian',
+      bulan: periodText,
+      transactions: analytics.profitData.value,
+      totalRevenue: summaryMetrics.value.totalOmzet,
+      totalCost: summaryMetrics.value.totalModal,
+      gross_profit: summaryMetrics.value.totalLaba,
+      transaction_count: analytics.profitData.value.length
+    })
+  } catch (err) {
+    alert('Gagal membuat laporan PDF. Pastikan jsPDF sudah terinstall.')
+  } finally {
+    isExporting.value = false
+  }
+}
 </script>
 
 <template>
@@ -131,11 +161,31 @@ const summaryMetrics = computed(() => {
 
     <!-- Tabel Profit Margin -->
     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+
       <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
         <h2 class="font-bold text-gray-800">Rincian Laba per Transaksi</h2>
-        <span class="text-xs font-bold bg-white border border-gray-200 px-2 py-1 rounded text-gray-500">{{
-          analytics.profitData.value.length }} Transaksi</span>
+        <div class="flex items-center gap-3">
+
+          <button @click="handleExportPDF" :disabled="isExporting"
+            class="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors disabled:opacity-50">
+            <svg v-if="!isExporting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-6" />
+            </svg>
+            <svg v-else class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            Export PDF
+          </button>
+
+          <span class="text-xs font-bold bg-white border border-gray-200 px-2 py-1 rounded text-gray-500">{{
+            analytics.profitData.value.length }} Transaksi</span>
+        </div>
       </div>
+
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-700">
           <thead class="bg-white text-gray-500 border-b border-gray-200 text-xs uppercase tracking-wider font-bold">
@@ -184,7 +234,7 @@ const summaryMetrics = computed(() => {
           </tbody>
         </table>
       </div>
-    </div>
 
+    </div>
   </AdminLayout>
 </template>

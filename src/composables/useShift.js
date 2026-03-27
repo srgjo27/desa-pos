@@ -17,14 +17,8 @@ export function useShift() {
       .eq('status', 'OPEN')
       .maybeSingle()
 
-    if (dbError) {
-      console.error('[DesaPOS] Gagal cek shift aktif:', dbError)
-      return null
-    }
-
-    if (data) {
-      shiftStore.setShift(data)
-    }
+    if (dbError)return null
+    if (data) shiftStore.setShift(data)
 
     return data
   }
@@ -45,7 +39,6 @@ export function useShift() {
         .single()
 
       if (dbError) {
-        console.error('[DesaPOS] Gagal buka shift:', dbError)
         error.value = 'Gagal memulai shift. Coba lagi.'
         return { success: false }
       }
@@ -53,7 +46,6 @@ export function useShift() {
       shiftStore.setShift(data)
       return { success: true, shift: data }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error buka shift:', err)
       error.value = 'Terjadi kesalahan tidak terduga.'
       return { success: false }
     } finally {
@@ -78,7 +70,6 @@ export function useShift() {
         .eq('id', shiftId)
 
       if (dbError) {
-        console.error('[DesaPOS] Gagal tutup shift:', dbError)
         error.value = 'Gagal menutup shift. Coba lagi.'
         return { success: false }
       }
@@ -86,7 +77,6 @@ export function useShift() {
       shiftStore.clearShift()
       return { success: true }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error tutup shift:', err)
       error.value = 'Terjadi kesalahan tidak terduga.'
       return { success: false }
     } finally {
