@@ -41,7 +41,7 @@ const validation = validateSupabaseEnv()
 const isConfigured = validation.isValid
 
 if (!isConfigured) {
-  console.error('[DesaPOS] ' + validation.message)
+  console.error(validation.message)
   if (typeof window !== 'undefined') {
     console.warn(
       '[DesaPOS] Aplikasi akan berjalan dalam mode demo tanpa Supabase.\n' +
@@ -51,7 +51,7 @@ if (!isConfigured) {
 }
 
 const resolvedUrl = isConfigured ? supabaseUrl : 'https://supabase.com/'
-const resolvedKey = isConfigured ? supabaseAnonKey : 'placeholder-anon-key'
+const resolvedKey = isConfigured ? supabaseAnonKey : ''
 
 export { isConfigured, validateSupabaseEnv }
 export const supabase = createClient(resolvedUrl, resolvedKey)

@@ -18,7 +18,6 @@ const paymentMethod = ref('CASH')
 const transactionDiscountRaw = ref('')
 
 const amountPaid = computed(() => Number(amountPaidRaw.value) || 0)
-
 const transactionDiscount = computed(() => Number(transactionDiscountRaw.value) || 0)
 
 const grandTotal = computed(() => {
@@ -111,11 +110,11 @@ async function handleCheckout() {
             leave-from="opacity-100 translate-y-0 sm:scale-100"
             leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
             <DialogPanel
-              class="relative transform overflow-hidden rounded-2xl bg-white text-left transition-all sm:my-8 sm:w-full sm:max-w-lg w-full">
+              class="relative transform overflow-hidden rounded-xl bg-white text-left transition-all sm:my-8 sm:w-full sm:max-w-lg w-full">
 
               <!-- Header -->
               <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <DialogTitle as="h3" class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <DialogTitle as="h3" class="text-xl font-bold flex items-center gap-2">
                   Proses Pembayaran
                 </DialogTitle>
                 <button @click="handleClose"
@@ -129,39 +128,39 @@ async function handleCheckout() {
               <!-- Body -->
               <div class="px-6 py-6 space-y-6">
 
-                <div v-if="cartStore.subtotalBeforeDiscount > 0" class="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div v-if="cartStore.subtotalBeforeDiscount > 0" class="bg-gray-50 rounded-lg p-4 space-y-2">
                   <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Subtotal</span>
-                    <span class="font-bold text-gray-800">{{ formatRupiah(cartStore.subtotalBeforeDiscount) }}</span>
+                    <span class="font-semibold">{{ formatRupiah(cartStore.subtotalBeforeDiscount) }}</span>
                   </div>
                   <div v-if="cartStore.totalItemDiscounts > 0" class="flex justify-between text-sm">
                     <span class="text-gray-600">Diskon Item</span>
-                    <span class="font-bold text-orange-600">-{{ formatRupiah(cartStore.totalItemDiscounts) }}</span>
+                    <span class="font-semibold text-orange-600">-{{ formatRupiah(cartStore.totalItemDiscounts) }}</span>
                   </div>
                   <div v-if="cartStore.totalItemDiscounts > 0"
                     class="border-t border-gray-200 pt-2 flex justify-between text-sm">
                     <span class="text-gray-600">Subtotal Setelah Diskon Item</span>
-                    <span class="font-bold text-gray-800">{{ formatRupiah(cartStore.subtotalAfterItemDiscount) }}</span>
+                    <span class="font-semibold">{{ formatRupiah(cartStore.subtotalAfterItemDiscount) }}</span>
                   </div>
                 </div>
 
-                <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
-                  <label class="text-sm font-bold text-amber-700 block mb-2">
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                  <label class="text-sm font-semibold text-amber-700 block mb-2">
                     Diskon Transaksi (Manual)
                   </label>
                   <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-amber-300">Rp</span>
                     <input type="text" placeholder="0" @input="onDiscountInput"
-                      class="w-full bg-amber-100 border border-amber-200 rounded-lg pl-12 pr-4 py-3 text-lg font-bold text-amber-900 placeholder-amber-300 focus:outline-none focus:bg-white focus:border-amber-400 transition-colors" />
+                      class="w-full bg-amber-100 border border-amber-200 rounded-lg pl-12 pr-4 py-3 text-base font-semibold text-amber-900 placeholder-amber-300 focus:outline-none focus:bg-white focus:border-amber-400 transition-colors" />
                   </div>
                   <p class="text-xs text-amber-600 mt-2">Kasir kasih diskon / potongan harga untuk pembeli</p>
                 </div>
 
                 <!-- Total Section -->
-                <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 text-center">
-                  <p class="text-sm font-semibold text-blue-600 mb-1">Total Tagihan ({{ cartStore.totalItems }} Item)
+                <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-center">
+                  <p class="text-sm font-semibold text-green-600 mb-1">Total Tagihan ({{ cartStore.totalItems }} Item)
                   </p>
-                  <p class="text-4xl font-black text-blue-700 tracking-tight">{{ formatRupiah(grandTotal) }}</p>
+                  <p class="text-3xl font-bold text-green-700 tracking-tight">{{ formatRupiah(grandTotal) }}</p>
                 </div>
 
                 <!-- Error Alert -->
@@ -175,29 +174,29 @@ async function handleCheckout() {
                 </div>
 
                 <!-- Payment Methods Toggle -->
-                <div class="flex bg-gray-100 p-1 rounded-xl">
+                <div class="flex bg-gray-100 p-1 rounded-lg">
                   <button @click="paymentMethod = 'CASH'"
                     class="flex-1 py-2 text-sm font-bold rounded-lg transition-colors focus:outline-none"
-                    :class="paymentMethod === 'CASH' ? 'bg-white text-gray-800' : 'text-gray-500 hover:text-gray-700'">Tunai
+                    :class="paymentMethod === 'CASH' ? 'bg-white' : 'text-gray-500 hover:text-gray-700'">Tunai
                     (Cash)</button>
                   <button @click="paymentMethod = 'QRIS'"
                     class="flex-1 py-2 text-sm font-bold rounded-lg transition-colors focus:outline-none"
-                    :class="paymentMethod === 'QRIS' ? 'bg-white text-gray-800' : 'text-gray-500 hover:text-gray-700'">QRIS</button>
+                    :class="paymentMethod === 'QRIS' ? 'bg-white' : 'text-gray-500 hover:text-gray-700'">QRIS</button>
                   <button @click="paymentMethod = 'TRANSFER'"
                     class="flex-1 py-2 text-sm font-bold rounded-lg transition-colors focus:outline-none"
-                    :class="paymentMethod === 'TRANSFER' ? 'bg-white text-gray-800' : 'text-gray-500 hover:text-gray-700'">Transfer</button>
+                    :class="paymentMethod === 'TRANSFER' ? 'bg-white' : 'text-gray-500 hover:text-gray-700'">Transfer</button>
                 </div>
 
                 <!-- Cash Options -->
                 <div v-if="paymentMethod === 'CASH'" class="space-y-4 animate-in fade-in slide-in-from-top-2">
 
                   <div class="flex flex-col gap-1.5">
-                    <label class="text-sm font-bold text-gray-700">Uang Diterima dari Pelanggan</label>
+                    <label class="text-sm font-semibold">Uang Diterima dari Pelanggan</label>
                     <div class="relative">
-                      <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
+                      <span class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-gray-400">Rp</span>
                       <input :value="amountPaidRaw ? Number(amountPaidRaw).toLocaleString('id-ID') : ''"
                         @input="onCashInput" type="text" inputmode="numeric"
-                        class="w-full bg-white border-2 border-gray-200 focus:border-blue-500 rounded-xl py-3 pl-12 pr-4 text-right font-bold text-lg text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-mono"
+                        class="w-full bg-white border border-gray-200 focus:border-green-500 rounded-lg py-3 pl-12 pr-4 text-right font-semibold text-base focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-mono"
                         placeholder="0" autofocus />
                     </div>
                   </div>
@@ -205,7 +204,7 @@ async function handleCheckout() {
                   <!-- Quick Cash Buttons -->
                   <div class="grid grid-cols-4 gap-2">
                     <button v-for="nom in quickNominals" :key="nom" @click="setQuickCash(nom)"
-                      class="py-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-gray-700 hover:text-blue-700 font-bold text-sm rounded-lg transition-colors"
+                      class="py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-gray-700 hover:text-green-700 font-semibold text-sm rounded-lg transition-colors"
                       type="button">
                       <span v-if="nom === grandTotal">Uang Pas</span>
                       <span v-else>{{ (nom / 1000).toLocaleString('id-ID') }}k</span>
@@ -213,12 +212,12 @@ async function handleCheckout() {
                   </div>
 
                   <!-- Change Calculator -->
-                  <div class="flex items-center justify-between p-4 rounded-xl border"
+                  <div class="flex items-center justify-between p-3 rounded-lg border"
                     :class="changeAmount >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'">
-                    <span class="font-bold" :class="changeAmount >= 0 ? 'text-green-700' : 'text-red-700'">
+                    <span class="font-semibold" :class="changeAmount >= 0 ? 'text-green-700' : 'text-red-700'">
                       {{ changeAmount >= 0 ? 'Uang Kembalian' : 'Kurang Bayar' }}
                     </span>
-                    <span class="text-xl font-black font-mono tracking-tighter"
+                    <span class="text-lg font-semibold font-mono tracking-tighter"
                       :class="changeAmount >= 0 ? 'text-green-700' : 'text-red-700'">
                       {{ formatRupiah(Math.abs(changeAmount)) }}
                     </span>
@@ -227,15 +226,15 @@ async function handleCheckout() {
 
                 <!-- Non-Cash Options Info -->
                 <div v-else class="text-center py-6 pb-2 animate-in fade-in zoom-in-95">
-                  <div class="w-20 h-20 bg-blue-50 rounded-2xl mx-auto flex items-center justify-center mb-4">
-                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-20 h-20 bg-gray-50 rounded-lg mx-auto flex items-center justify-center mb-4">
+                    <svg class="w-18 h-18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                   </div>
-                  <h4 class="font-bold text-gray-800">Pembayaran Non-Tunai</h4>
+                  <h4 class="font-semibold">Pembayaran Non-Tunai</h4>
                   <p class="text-sm text-gray-500 mt-2 px-8">Pastikan pelanggan telah melakukan transfer atau scan QRIS
-                    sesuai nominal tagihan <strong class="text-gray-700">{{ formatRupiah(grandTotal) }}</strong> sebelum
+                    sesuai nominal tagihan <strong class="text-black">{{ formatRupiah(grandTotal) }}</strong> sebelum
                     memproses.</p>
                 </div>
 
@@ -244,11 +243,11 @@ async function handleCheckout() {
               <!-- Footer Actions -->
               <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
                 <button type="button" @click="handleClose"
-                  class="flex-1 px-4 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors focus:outline-none">
+                  class="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-50 transition-colors focus:outline-none">
                   Batal
                 </button>
                 <button type="button" @click="handleCheckout" :disabled="!isCashEnough || loading"
-                  class="flex-1 px-4 py-3.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none flex justify-center items-center gap-2">
+                  class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none flex justify-center items-center gap-2">
                   <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none"
                     viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

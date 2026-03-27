@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 import { supabase } from '@/services/supabase'
+import { useAuthStore } from '@/stores/authStore'
+import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useUsers() {
   const users = ref([])
@@ -17,13 +19,11 @@ export function useUsers() {
         .order('created_at', { ascending: false })
 
       if (dbError) {
-        console.error('[DesaPOS] Error fetching users:', dbError)
         error.value = 'Gagal mengambil data pengguna.'
       } else {
         users.value = data || []
       }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error fetching users:', err)
       error.value = 'Terjadi kesalahan sistem.'
     } finally {
       loading.value = false
@@ -42,7 +42,6 @@ export function useUsers() {
         .eq('id', userId)
 
       if (dbError) {
-        console.error('[DesaPOS] Error updating user status:', dbError)
         error.value = 'Gagal mengubah status pengguna.'
         return false
       } else {
@@ -50,10 +49,26 @@ export function useUsers() {
         if (index !== -1) {
           users.value[index].is_active = newStatus
         }
+        
+        const authStore = useAuthStore()
+        if (authStore.user?.id) {
+          await logActivity({
+            activityType: ACTIVITY_TYPES.USER_EDIT,
+            userId: authStore.user.id,
+            description: `User ${userId} status changed to ${newStatus ? 'ACTIVE' : 'INACTIVE'}`,
+            metadata: {
+              targetUserId: userId,
+              changedBy: authStore.user.id,
+              changedByName: authStore.user.name,
+              newStatus: newStatus,
+              timestamp: new Date().toISOString()
+            }
+          })
+        }
+        
         return true
       }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error updating user status:', err)
       error.value = 'Terjadi kesalahan sistem saat mengubah status.'
       return false
     } finally {
@@ -73,13 +88,11 @@ export function useUsers() {
         .single()
 
       if (dbError) {
-        console.error('[DesaPOS] Error fetching user detail:', dbError)
         error.value = 'Gagal memuat profil pengguna.'
         return null
       }
       return data
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error fetching user detail:', err)
       error.value = 'Terjadi kesalahan sistem.'
       return null
     } finally {
@@ -91,21 +104,39 @@ export function useUsers() {
     error.value = null
 
     try {
+      const userToDelete = users.value.find(u => u.id === userId)
+
       const { error: dbError } = await supabase
         .from('users')
         .delete()
         .eq('id', userId)
 
       if (dbError) {
-        console.error('[DesaPOS] Error deleting user:', dbError)
         error.value = 'Gagal menghapus pengguna.'
         return false
       }
 
       users.value = users.value.filter(u => u.id !== userId)
+      
+      const authStore = useAuthStore()
+      if (authStore.user?.id && userToDelete) {
+        await logActivity({
+          activityType: ACTIVITY_TYPES.USER_DELETE,
+          userId: authStore.user.id,
+          description: `User deleted: ${userToDelete.name} (${userToDelete.role})`,
+          metadata: {
+            deletedUserId: userId,
+            deletedUserName: userToDelete.name,
+            deletedUserRole: userToDelete.role,
+            deletedByUserId: authStore.user.id,
+            deletedByName: authStore.user.name,
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
+      
       return true
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error deleting user:', err)
       error.value = 'Terjadi kesalahan sistem saat menghapus pengguna.'
       return false
     }

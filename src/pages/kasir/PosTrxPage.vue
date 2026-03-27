@@ -1,11 +1,11 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { useShiftStore } from '@/stores/shiftStore'
 import { useCartStore } from '@/stores/cartStore'
-import { useAuth } from '@/composables/useAuth'
+import { useProducts } from '@/composables/useProducts'
+import { usePosTrxState } from '@/composables/usePosTrxState'
 import { formatRupiah } from '@/utils/formatCurrency'
 import CheckoutModal from '@/components/pos/CheckoutModal.vue'
 import ReceiptModal from '@/components/pos/ReceiptModal.vue'
@@ -15,17 +15,19 @@ const router = useRouter()
 const authStore = useAuthStore()
 const shiftStore = useShiftStore()
 const cartStore = useCartStore()
-const { logout, loading: logoutLoading } = useAuth()
 
-const showCheckoutModal = ref(false)
-const showReceiptModal = ref(false)
-const showCloseShiftModal = ref(false)
-const latestReceiptData = ref({})
-
-const products = ref([])
-const loadingProducts = ref(true)
-const searchQuery = ref('')
-const showMobileCart = ref(false)
+const { loading: loadingProducts, searchQuery, filteredProducts, fetchProducts } = useProducts()
+const {
+  showCheckoutModal,
+  showReceiptModal,
+  showCloseShiftModal,
+  showMobileCart,
+  latestReceiptData,
+  logoutLoading,
+  handleLogout,
+  handleCheckoutSuccess,
+  toggleMobileCart,
+} = usePosTrxState()
 
 onMounted(async () => {
   if (authStore.isKasir && !shiftStore.hasActiveShift) {
@@ -35,47 +37,13 @@ onMounted(async () => {
   await fetchProducts()
 })
 
-async function fetchProducts() {
-  loadingProducts.value = true
-  const { data, error } = await supabase
-    .from('products')
-    .select('id, sku, name, price, stock, image_url, discount_price, is_on_discount')
-    .eq('is_active', true)
-    .order('name')
-
-  if (!error && data) {
-    products.value = data
-  } else if (error) {
-    console.error(error)
-  }
-  loadingProducts.value = false
-}
-
-const filteredProducts = computed(() => {
-  const query = searchQuery.value.toLowerCase()
-  return products.value.filter(p =>
-    p.name.toLowerCase().includes(query) ||
-    p.sku.toLowerCase().includes(query)
-  )
-})
-
-function handleLogout() {
-  if (shiftStore.hasActiveShift) {
-    showCloseShiftModal.value = true
-  } else {
-    logout()
-  }
-}
-
 function openCheckout() {
   if (cartStore.items.length === 0) return
   showCheckoutModal.value = true
 }
 
-function handleCheckoutSuccess(receiptData) {
-  showCheckoutModal.value = false
-  latestReceiptData.value = receiptData
-  showReceiptModal.value = true
+function updateSearchQuery(query) {
+  searchQuery.value = query
 }
 </script>
 
@@ -127,7 +95,8 @@ function handleCheckoutSuccess(receiptData) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input v-model="searchQuery" type="text" placeholder="Cari barang atau SKU..."
+          <input :value="searchQuery" @input="updateSearchQuery($event.target.value)" type="text"
+            placeholder="Cari nama barang atau SKU..."
             class="w-full bg-gray-100 border border-transparent focus:bg-white focus:border-green-500 rounded-lg pl-12 pr-4 py-3 text-sm font-medium text-gray-800 placeholder-gray-500 focus:outline-none transition-colors" />
         </div>
       </div>
@@ -173,7 +142,7 @@ function handleCheckoutSuccess(receiptData) {
 
       <!-- Tombol Toggle Mobile Keranjang (Bottom Bar) -->
       <div class="lg:hidden bg-white border-t border-gray-200 p-4 shrink-0" v-if="cartStore.totalItems > 0">
-        <button @click="showMobileCart = true"
+        <button @click="toggleMobileCart(true)"
           class="w-full bg-green-600 text-white p-4 rounded-lg font-bold flex items-center justify-between focus:outline-none">
           <span class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +164,7 @@ function handleCheckoutSuccess(receiptData) {
       <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-white shrink-0">
         <div class="flex items-center gap-4">
           <!-- Tombol Back hanya di Mobile -->
-          <button @click="showMobileCart = false"
+          <button @click="toggleMobileCart(false)"
             class="lg:hidden p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 focus:outline-none">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

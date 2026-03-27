@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { logError } from '../services/errorHandler'
+import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useInventory() {
   const authStore = useAuthStore()
@@ -63,6 +64,21 @@ export function useInventory() {
 
       products.value.push(newProd)
 
+      await logActivity({
+        activityType: ACTIVITY_TYPES.INVENTORY_ADD,
+        userId: authStore.user.id,
+        description: `New product added: ${name} (SKU: ${sku})`,
+        metadata: {
+          productId: newProd.id,
+          productName: name,
+          productSku: sku,
+          costPrice: cost_price,
+          sellingPrice: price,
+          initialStock: stock,
+          timestamp: new Date().toISOString()
+        }
+      })
+
       return { success: true, data: newProd }
     } catch (err) {
       error.value = err.message
@@ -122,6 +138,8 @@ export function useInventory() {
     loading.value = true
     error.value = null
     try {
+      const productToDelete = products.value.find(p => p.id === productId)
+
       const { error: delErr } = await supabase
         .from('products')
         .update({ is_active: false })
@@ -130,6 +148,23 @@ export function useInventory() {
       if (delErr) error.value = delErr
 
       products.value = products.value.filter(p => p.id !== productId)
+
+      if (productToDelete && authStore.user?.id) {
+        await logActivity({
+          activityType: ACTIVITY_TYPES.INVENTORY_DELETE,
+          userId: authStore.user.id,
+          description: `Product soft deleted: ${productToDelete.name} (SKU: ${productToDelete.sku})`,
+          metadata: {
+            productId: productId,
+            productName: productToDelete.name,
+            productSku: productToDelete.sku,
+            costPrice: productToDelete.cost_price,
+            sellingPrice: productToDelete.price,
+            remainingStock: productToDelete.stock,
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
 
       return { success: true }
     } catch (err) {
@@ -186,6 +221,23 @@ export function useInventory() {
       if (prodIndex !== -1) {
         products.value[prodIndex] = updatedProd
       }
+
+      await logActivity({
+        activityType: ACTIVITY_TYPES.INVENTORY_EDIT,
+        userId: authStore.user.id,
+        description: `Product updated: ${name} (SKU: ${sku})`,
+        metadata: {
+          productId: id,
+          productName: name,
+          productSku: sku,
+          costPrice: cost_price,
+          sellingPrice: price,
+          stockBefore,
+          stockAfter: stock,
+          stockChangeReason: stockDifference !== 0 ? 'Stock adjusted during edit' : 'No stock change',
+          timestamp: new Date().toISOString()
+        }
+      })
 
       return { success: true, data: updatedProd }
     } catch (err) {

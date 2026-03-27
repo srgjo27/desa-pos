@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { supabase } from '@/services/supabase'
 import { useShiftStore } from '@/stores/shiftStore'
 import { useAuthStore } from '@/stores/authStore'
+import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useShift() {
   const shiftStore = useShiftStore()
@@ -44,6 +45,21 @@ export function useShift() {
       }
 
       shiftStore.setShift(data)
+      
+      await logActivity({
+        activityType: ACTIVITY_TYPES.SHIFT_OPEN,
+        userId: authStore.user.id,
+        description: `Shift opened - Opening cash: Rp${openingCash.toLocaleString('id-ID')}`,
+        metadata: {
+          shiftId: data.id,
+          userId: authStore.user.id,
+          userName: authStore.user.name,
+          openingCash,
+          openedAt: data.opened_at,
+          timestamp: new Date().toISOString()
+        }
+      })
+      
       return { success: true, shift: data }
     } catch (err) {
       error.value = 'Terjadi kesalahan tidak terduga.'
@@ -75,6 +91,24 @@ export function useShift() {
       }
 
       shiftStore.clearShift()
+      
+      await logActivity({
+        activityType: ACTIVITY_TYPES.SHIFT_CLOSE,
+        userId: authStore.user.id,
+        description: `Shift closed - Closing cash: Rp${closingCash.toLocaleString('id-ID')}, Expected: Rp${expectedCash.toLocaleString('id-ID')}, Difference: Rp${(closingCash - expectedCash).toLocaleString('id-ID')}`,
+        metadata: {
+          shiftId: shiftId,
+          userId: authStore.user.id,
+          userName: authStore.user.name,
+          closingCash,
+          expectedCash,
+          difference: closingCash - expectedCash,
+          notes: notes || 'No notes',
+          closedAt: new Date().toISOString(),
+          timestamp: new Date().toISOString()
+        }
+      })
+      
       return { success: true }
     } catch (err) {
       error.value = 'Terjadi kesalahan tidak terduga.'

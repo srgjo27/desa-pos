@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useShiftStore } from '@/stores/shiftStore'
 import { useCartStore } from '@/stores/cartStore'
 import { DesaPOSError, ERROR_CODES, logError, getErrorMessage } from '@/services/errorHandler'
+import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useCheckout() {
   const authStore = useAuthStore()
@@ -17,7 +18,7 @@ export function useCheckout() {
   async function processCheckout({ 
     amountPaid, 
     paymentMethod = 'CASH',
-    transactionDiscount = 0,  // ✅ BARU
+    transactionDiscount = 0,
     customerPhone = '', 
     notes = '' 
   }) {
@@ -29,11 +30,10 @@ export function useCheckout() {
       if (!shiftStore.shiftId) error.value = getErrorMessage(ERROR_CODES.CHECKOUT_STOCK_ERROR)
       if (cartStore.items.length === 0) error.value = getErrorMessage(ERROR_CODES.CART_EMPTY)
       
-      // ✅ UBAH: Gunakan subtotalAfterItemDiscount
       const totalAmount = cartStore.subtotalAfterItemDiscount
       const discountAmount = Math.min(
         transactionDiscount, 
-        totalAmount  // Ga boleh diskon > subtotal
+        totalAmount
       )
       const grandTotal = totalAmount - discountAmount
 
@@ -57,7 +57,7 @@ export function useCheckout() {
           user_id: authStore.user.id,
           shift_id: shiftStore.shiftId,
           total_amount: totalAmount,
-          discount_amount: discountAmount,  // ✅ UBAH: Simpan diskon transaksional
+          discount_amount: discountAmount,
           grand_total: grandTotal,
           amount_paid: amountPaid,
           change_amount: changeAmount,
@@ -71,14 +71,13 @@ export function useCheckout() {
 
       if (saleError) error.value = getErrorMessage(ERROR_CODES.DB_ERROR)
 
-      // ✅ UBAH: Simpan total diskon per item
       const saleItemsData = cartStore.items.map(item => ({
         sale_id: saleData.id,
         product_id: item.product_id,
         qty: item.qty,
         price_at_sale: item.price_at_sale || item.price,
         cost_at_sale: costMap.get(item.product_id) || 0,
-        discount_amount: (item.itemDiscount || 0) * item.qty  // ✅ UBAH: Diskon per item
+        discount_amount: (item.itemDiscount || 0) * item.qty
       }))
 
       const { error: itemsError } = await supabase
@@ -90,7 +89,6 @@ export function useCheckout() {
         error.value = getErrorMessage(ERROR_CODES.DB_ERROR)
       }
 
-      // ✅ UBAH: Include diskon details di receipt
       const receiptData = {
         saleId: saleData.id,
         createdAt: saleData.created_at,
@@ -99,8 +97,8 @@ export function useCheckout() {
           ...item,
           costAtSale: costMap.get(item.product_id) || 0
         })),
-        subtotalBeforeDiscount: cartStore.subtotalBeforeDiscount,  // ✅ BARU
-        totalItemDiscounts: cartStore.totalItemDiscounts,           // ✅ BARU
+        subtotalBeforeDiscount: cartStore.subtotalBeforeDiscount,
+        totalItemDiscounts: cartStore.totalItemDiscounts,
         totalAmount,
         discountAmount,
         grandTotal,
@@ -112,10 +110,42 @@ export function useCheckout() {
 
       cartStore.clearCart()
 
+      await logActivity({
+        activityType: ACTIVITY_TYPES.POS_CHECKOUT,
+        userId: authStore.user.id,
+        description: `Sale transaction completed - ${cartStore.items.length} items, Total: Rp${grandTotal.toLocaleString('id-ID')}`,
+        metadata: {
+          saleId: saleData.id,
+          shiftId: shiftStore.shiftId,
+          itemCount: cartStore.items.length,
+          subtotal: cartStore.subtotalAfterItemDiscount,
+          transactionDiscount: discountAmount,
+          grandTotal,
+          paymentMethod,
+          cashierName: authStore.user.name,
+          customerPhone: customerPhone || 'N/A',
+          timestamp: new Date().toISOString()
+        }
+      })
+
       return { success: true, saleId: saleData.id, receiptData }
     } catch (err) {
       error.value = err
       logError(err, { context: 'checkout' })
+      
+      if (authStore.user?.id) {
+        await logActivity({
+          activityType: ACTIVITY_TYPES.ERROR_OCCURRED,
+          userId: authStore.user.id,
+          description: `Checkout error: ${err?.message || 'Unknown error'}`,
+          metadata: {
+            errorMessage: err?.message,
+            errorContext: 'POS_CHECKOUT',
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
+      
       return { success: false }
     } finally {
       loading.value = false

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { ERROR_CODES, getErrorMessage, logError } from '../services/errorHandler'
+import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useAuth() {
   const router = useRouter()
@@ -39,6 +40,16 @@ export function useAuth() {
 
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
+        await logActivity({
+          activityType: ACTIVITY_TYPES.SECURITY_ALERT,
+          userId: data.id,
+          description: `Failed login attempt for user ${data.name}: Invalid PIN`,
+          metadata: {
+            userName: data.name,
+            failureReason: 'INVALID_PIN',
+            timestamp: new Date().toISOString()
+          }
+        })
         error.value = getErrorMessage(ERROR_CODES.AUTH_INVALID_PIN)
         return { success: false }
       }
@@ -50,6 +61,17 @@ export function useAuth() {
 
       const { pin: _pin, is_active: _active, ...safeUser } = data
       authStore.setUser(safeUser)
+
+      await logActivity({
+        activityType: ACTIVITY_TYPES.AUTH_LOGIN,
+        userId: data.id,
+        description: `User ${data.name} (${data.role}) successfully logged in`,
+        metadata: {
+          userName: data.name,
+          userRole: data.role,
+          timestamp: new Date().toISOString()
+        }
+      })
 
       if (data.role === 'ADMIN') {
         await router.push({ name: 'Inventory' })
@@ -69,6 +91,21 @@ export function useAuth() {
   async function logout() {
     loading.value = true
     try {
+      const currentUser = authStore.user
+      
+      if (currentUser?.id) {
+        await logActivity({
+          activityType: ACTIVITY_TYPES.AUTH_LOGOUT,
+          userId: currentUser.id,
+          description: `User ${currentUser.name} successfully logged out`,
+          metadata: {
+            userName: currentUser.name,
+            userRole: currentUser.role,
+            sessionEnd: new Date().toISOString()
+          }
+        })
+      }
+      
       authStore.clearUser()
       await router.push({ name: 'Login' })
       return { success: true }
