@@ -34,6 +34,7 @@ onMounted(async () => {
     await router.push({ name: 'OpenShift' })
     return
   }
+
   await fetchProducts()
 })
 

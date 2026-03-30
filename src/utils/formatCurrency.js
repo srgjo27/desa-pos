@@ -19,3 +19,15 @@ export function formatTime(time) {
   if (!time) return 'Sekarang'
   return new Date(time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 }
+
+export function formatDateLong(date) {
+  return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+export function formatDateToInputFormat(date) {
+  return date.toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).split('/').reverse().join('-');
+}

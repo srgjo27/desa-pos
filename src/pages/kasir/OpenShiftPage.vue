@@ -5,6 +5,7 @@ import { useShift } from '@/composables/useShift'
 import { useAuthStore } from '@/stores/authStore'
 import { formatRupiah } from '@/utils/formatCurrency'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import { formatTime, formatDateLong } from '@/utils/formatCurrency'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -13,16 +14,6 @@ const { openShift, loading, error } = useShift()
 const now = ref(new Date())
 const form = reactive({ openingCash: '' })
 const formError = ref('')
-
-const timer = setInterval(() => { now.value = new Date() }, 1000)
-onMounted(() => { })
-
-function formatTime(date) {
-  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-}
-function formatDateLong(date) {
-  return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-}
 
 function onCashInput(e) {
   const raw = e.target.value.replace(/\D/g, '')
