@@ -27,13 +27,11 @@ export function useShifts() {
         .order('opened_at', { ascending: false })
 
       if (dbError) {
-        console.error('[DesaPOS] Error fetching shifts:', dbError)
         error.value = 'Gagal mengambil riwayat absensi kasir.'
       } else {
         shifts.value = data || []
       }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error fetching shifts:', err)
       error.value = 'Terjadi kesalahan sistem saat memuat shift.'
     } finally {
       loading.value = false
@@ -57,13 +55,11 @@ export function useShifts() {
         .order('opened_at', { ascending: false })
 
       if (dbError) {
-        console.error('[DesaPOS] Error fetching user shifts:', dbError)
         error.value = 'Gagal mengambil riwayat absensi pengguna.'
       } else {
         shifts.value = data || []
       }
     } catch (err) {
-      console.error('[DesaPOS] Unexpected error fetching user shifts:', err)
       error.value = 'Terjadi kesalahan sistem saat memuat shift pengguna.'
     } finally {
       loading.value = false

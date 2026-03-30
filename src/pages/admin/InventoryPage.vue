@@ -113,7 +113,6 @@ async function handleExportInventoryPDF() {
       totalAssetValue: totalAssetValue.value
     })
   } catch (err) {
-    console.error('Error exporting inventory PDF:', err)
     alert('Gagal membuat laporan PDF. Pastikan jsPDF sudah terinstall.')
   } finally {
     isExporting.value = false
