@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
-import { logError } from '../services/errorHandler'
+import { logError } from '@/services/errorHandler'
 import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useInventory() {
@@ -24,7 +24,7 @@ export function useInventory() {
 
       products.value = data || []
     } catch (err) {
-      error.value = 'Gagal mengambil data produk: ' + err.message
+      error.value = err.message
     } finally {
       loading.value = false
     }
@@ -33,6 +33,7 @@ export function useInventory() {
   async function addProduct({ sku, name, cost_price, price, stock, image_url }) {
     loading.value = true
     error.value = null
+
     try {
       if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
 
@@ -44,7 +45,7 @@ export function useInventory() {
         .select()
         .single()
 
-      if (insertErr) console.error(insertErr)
+      if (insertErr) return
 
       if (stock > 0) {
         const { error: logErr } = await supabase
@@ -59,7 +60,7 @@ export function useInventory() {
             notes: 'Stok awal penambahan produk baru'
           })
 
-        if (logErr) logError(logErr, { context: 'addProduct - log initial stock' })
+        if (logErr) return
       }
 
       products.value.push(newProd)
@@ -79,10 +80,9 @@ export function useInventory() {
         }
       })
 
-      return { success: true, data: newProd }
+      return { data: newProd }
     } catch (err) {
       error.value = err.message
-      return { success: false }
     } finally {
       loading.value = false
     }
@@ -91,6 +91,7 @@ export function useInventory() {
   async function addStock(productId, qtyAdded, notes = '') {
     loading.value = true
     error.value = null
+
     try {
       if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
       if (qtyAdded <= 0) error.value = 'Jumlah stok ditambahkan harus lebih dari 0.'
@@ -107,7 +108,7 @@ export function useInventory() {
         .update({ stock: stockAfter })
         .eq('id', productId)
 
-      if (updateErr) throw updateErr
+      if (updateErr) return
 
       const { error: logErr } = await supabase
         .from('stock_logs')
@@ -121,14 +122,11 @@ export function useInventory() {
           notes: notes || 'Restock manual via Dashboard'
         })
 
-      if (logErr) logError(logErr, { context: 'addStock - log stock addition' })
+      if (logErr) return
 
       products.value[prodIndex].stock = stockAfter
-
-      return { success: true }
     } catch (err) {
       error.value = err.message
-      return { success: false }
     } finally {
       loading.value = false
     }
@@ -137,6 +135,7 @@ export function useInventory() {
   async function deleteProduct(productId) {
     loading.value = true
     error.value = null
+    
     try {
       const productToDelete = products.value.find(p => p.id === productId)
 
@@ -145,7 +144,7 @@ export function useInventory() {
         .update({ is_active: false })
         .eq('id', productId)
 
-      if (delErr) error.value = delErr
+      if (delErr) return
 
       products.value = products.value.filter(p => p.id !== productId)
 
@@ -165,11 +164,8 @@ export function useInventory() {
           }
         })
       }
-
-      return { success: true }
     } catch (err) {
       error.value = err.message
-      return { success: false }
     } finally {
       loading.value = false
     }
@@ -199,7 +195,7 @@ export function useInventory() {
         .select()
         .single()
 
-      if (updateErr) console.log(updateErr)
+      if (updateErr) return
 
       if (stockDifference !== 0) {
         const { error: logErr } = await supabase
@@ -214,7 +210,7 @@ export function useInventory() {
             notes: `Adjustment stok via Edit Produk (${stockBefore} → ${stockAfter})`
           })
 
-        if (logErr) logError(logErr, { context: 'editProduct - log stock adjustment' })
+        if (logErr) return
       }
 
       const prodIndex = products.value.findIndex(p => p.id === id)
@@ -239,10 +235,9 @@ export function useInventory() {
         }
       })
 
-      return { success: true, data: updatedProd }
+      return { data: updatedProd }
     } catch (err) {
       error.value = err.message
-      return { success: false }
     } finally {
       loading.value = false
     }
@@ -251,6 +246,7 @@ export function useInventory() {
   async function updateDiscount(productId, { is_on_discount, discount_price }) {
     loading.value = true
     error.value = null
+
     try {
       const updatePayload = {
         is_on_discount: is_on_discount || false,
@@ -264,7 +260,7 @@ export function useInventory() {
         .select()
         .single()
 
-      if (updateErr) throw updateErr
+      if (updateErr) return
 
       const prodIndex = products.value.findIndex(p => p.id === productId)
       if (prodIndex !== -1) {
@@ -275,10 +271,9 @@ export function useInventory() {
         }
       }
 
-      return { success: true, data: updatedProd }
+      return { data: updatedProd }
     } catch (err) {
       error.value = err.message
-      return { success: false }
     } finally {
       loading.value = false
     }

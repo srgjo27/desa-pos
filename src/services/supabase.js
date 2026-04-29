@@ -50,7 +50,7 @@ if (!isConfigured) {
   }
 }
 
-const resolvedUrl = isConfigured ? supabaseUrl : 'https://supabase.com/'
+const resolvedUrl = isConfigured ? supabaseUrl : ''
 const resolvedKey = isConfigured ? supabaseAnonKey : ''
 
 export { isConfigured, validateSupabaseEnv }

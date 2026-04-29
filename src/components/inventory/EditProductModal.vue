@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { useInventory } from '@/composables/useInventory'
+import { useInventory } from '@/composables/inventory/useInventory'
 import { useValidation } from '@/composables/useValidation'
 import { validateImageFile, updateProductImage } from '@/services/imageService'
 

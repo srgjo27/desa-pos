@@ -42,7 +42,7 @@ class DesaPOSPrinter {
   } = {}) {
     try {
       if (!this.isConnected) return 'Printer tidak terkoneksi'
-      
+
       const receiptData = this._buildReceiptData({
         saleId,
         cashierName,
@@ -184,7 +184,6 @@ class DesaPOSPrinter {
     report += `Total Transaksi: ${transactions.length}\n`
     report += `Total Pendapatan: ${this._formatCurrency(totalRevenue)}\n\n`
 
-    // Transaction summary
     transactions.slice(0, 10).forEach((trx, idx) => {
       const time = trx.time ? trx.time.substring(0, 5) : '--:--'
       const amount = this._formatCurrency(trx.grand_total || 0)

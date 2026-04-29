@@ -33,7 +33,7 @@ export async function logActivity({
   userAgent = null
 } = {}) {
   try {
-    if (!activityType || !userId) return { success: false, error: 'Missing required fields' }
+    if (!activityType || !userId) return { error: 'Missing required fields' }
 
     if (!ipAddress) {
       ipAddress = await getClientIpAddress()
@@ -61,10 +61,10 @@ export async function logActivity({
 
     if (error) console.error(error)
 
-    return { success: true, logId: data?.[0]?.id }
+    return { logId: data?.[0]?.id }
   } catch (err) {
     logError(err, { context: 'activityLogService.logActivity', activityType })
-    return { success: false, error: err.message }
+    return { error: err.message }
   }
 }
 
@@ -112,11 +112,10 @@ export async function getActivityLogs({
 
     const { data, error } = await query
 
-    if (error) console.error(error)
+    if (error) return
 
     return data || []
   } catch (err) {
-    logError(err, { context: 'activityLogService.getActivityLogs' })
     return err
   }
 }
@@ -135,24 +134,23 @@ export async function getActivitySummary(startDate, endDate) {
 
     return data || {}
   } catch (err) {
-    logError(err, { context: 'activityLogService.getActivitySummary' })
     return err
   }
 }
 
 export function useActivityLog() {
   return {
-    logActivity,
     ACTIVITY_TYPES,
+    logActivity,
     getActivityLogs,
     getActivitySummary
   }
 }
 
 export default {
+  ACTIVITY_TYPES,
   logActivity,
   getActivityLogs,
   getActivitySummary,
   useActivityLog,
-  ACTIVITY_TYPES
 }

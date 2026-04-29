@@ -4,7 +4,8 @@ import bcrypt from 'bcryptjs'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { ERROR_CODES, getErrorMessage, logError } from '../services/errorHandler'
-import { logActivity, ACTIVITY_TYPES } from '@/services/activityLogService'
+import { logActivityHelper } from '@/utils/activityLoggerHelper'
+import { ACTIVITY_TYPES } from '@/services/activityLogService'
 
 export function useAuth() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export function useAuth() {
         .maybeSingle()
 
       if (dbError) {
-        logError(dbError, { context: 'login' })
+        error.value = getErrorMessage(ERROR_CODES.DB_ERROR)
         return { success: false }
       }
 
@@ -40,16 +41,12 @@ export function useAuth() {
 
       const isPinValid = await bcrypt.compare(pin, data.pin)
       if (!isPinValid) {
-        await logActivity({
-          activityType: ACTIVITY_TYPES.SECURITY_ALERT,
-          userId: data.id,
-          description: `Failed login attempt for user ${data.name}: Invalid PIN`,
-          metadata: {
-            userName: data.name,
-            failureReason: 'INVALID_PIN',
-            timestamp: new Date().toISOString()
-          }
-        })
+        await logActivityHelper(
+          ACTIVITY_TYPES.SECURITY_ALERT,
+          data.id,
+          `Failed login attempt for user ${data.name}: Invalid PIN`,
+          { userName: data.name, failureReason: 'INVALID_PIN' }
+        )
         error.value = getErrorMessage(ERROR_CODES.AUTH_INVALID_PIN)
         return { success: false }
       }
@@ -62,16 +59,12 @@ export function useAuth() {
       const { pin: _pin, is_active: _active, ...safeUser } = data
       authStore.setUser(safeUser)
 
-      await logActivity({
-        activityType: ACTIVITY_TYPES.AUTH_LOGIN,
-        userId: data.id,
-        description: `User ${data.name} (${data.role}) successfully logged in`,
-        metadata: {
-          userName: data.name,
-          userRole: data.role,
-          timestamp: new Date().toISOString()
-        }
-      })
+      await logActivityHelper(
+        ACTIVITY_TYPES.AUTH_LOGIN,
+        data.id,
+        `User ${data.name} (${data.role}) successfully logged in`,
+        { userName: data.name, userRole: data.role }
+      )
 
       if (data.role === 'ADMIN') {
         await router.push({ name: 'Inventory' })
@@ -81,7 +74,6 @@ export function useAuth() {
 
       return { success: true }
     } catch (err) {
-      logError(err, { context: 'login' })
       return { success: false }
     } finally {
       loading.value = false
@@ -92,26 +84,19 @@ export function useAuth() {
     loading.value = true
     try {
       const currentUser = authStore.user
-      
+
       if (currentUser?.id) {
-        await logActivity({
-          activityType: ACTIVITY_TYPES.AUTH_LOGOUT,
-          userId: currentUser.id,
-          description: `User ${currentUser.name} successfully logged out`,
-          metadata: {
-            userName: currentUser.name,
-            userRole: currentUser.role,
-            sessionEnd: new Date().toISOString()
-          }
-        })
+        await logActivityHelper(
+          ACTIVITY_TYPES.AUTH_LOGOUT,
+          currentUser.id,
+          `User ${currentUser.name} successfully logged out`,
+          { userName: currentUser.name, userRole: currentUser.role }
+        )
       }
-      
+
       authStore.clearUser()
       await router.push({ name: 'Login' })
-      return { success: true }
-    } catch (err) {
-      logError(err, { context: 'logout' })
-      return { success: false }
+    } catch (_) {
     } finally {
       loading.value = false
     }

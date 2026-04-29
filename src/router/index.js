@@ -9,6 +9,11 @@ const routes = [
     meta: { requiresGuest: true },
   },
   {
+    path: '/access-denied',
+    name: 'AccessDenied',
+    component: () => import('@/pages/AccessDeniedPage.vue'),
+  },
+  {
     path: '/open-shift',
     name: 'OpenShift',
     component: () => import('@/pages/kasir/OpenShiftPage.vue'),
@@ -77,9 +82,7 @@ router.beforeEach((to, from, next) => {
       return next({ name: 'Login' })
     }
     if (to.meta.roles && !to.meta.roles.includes(authStore.role)) {
-      if (authStore.isAdmin) return next({ name: 'Inventory' })
-      if (authStore.isKasir) return next({ name: 'OpenShift' })
-      return next({ name: 'Login' })
+      return next({ name: 'AccessDenied' })
     }
   }
 

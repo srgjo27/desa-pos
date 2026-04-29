@@ -1,8 +1,8 @@
 export class DesaPOSError extends Error {
   constructor(code, message, detail = null) {
     super(message)
-    this.name = 'DesaPOSError'
     this.code = code
+    this.name = 'DesaPOS'
     this.detail = detail
     this.timestamp = new Date().toISOString()
   }
@@ -12,26 +12,19 @@ export const ERROR_CODES = {
   AUTH_INVALID_PIN: 'AUTH_INVALID_PIN',
   AUTH_USER_INACTIVE: 'AUTH_USER_INACTIVE',
   AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
-  
   CART_EMPTY: 'CART_EMPTY',
   CHECKOUT_INSUFFICIENT_PAYMENT: 'CHECKOUT_INSUFFICIENT_PAYMENT',
   CHECKOUT_STOCK_ERROR: 'CHECKOUT_STOCK_ERROR',
-  
   DB_ERROR: 'DB_ERROR',
   DB_CONSTRAINT_VIOLATION: 'DB_CONSTRAINT_VIOLATION',
   DB_NOT_FOUND: 'DB_NOT_FOUND',
-  
   NETWORK_ERROR: 'NETWORK_ERROR',
   OFFLINE: 'OFFLINE',
-  
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   INVALID_INPUT: 'INVALID_INPUT',
-  
   INVENTORY_DUPLICATE_SKU: 'INVENTORY_DUPLICATE_SKU',
   INVENTORY_PRODUCT_NOT_FOUND: 'INVENTORY_PRODUCT_NOT_FOUND',
-  
   UPLOAD_ERROR: 'UPLOAD_ERROR',
-  
   UNKNOWN: 'UNKNOWN'
 }
 
@@ -47,14 +40,14 @@ export function mapSupabaseError(error) {
 
 export function logError(error, context = {}) {
   const errorLog = {
-    timestamp: new Date().toISOString(),
     code: error?.code || ERROR_CODES.UNKNOWN,
-    message: error?.message || 'Unknown error',
+    message: error?.message || 'Unknown',
     context,
-    stack: error?.stack
+    stack: error?.stack,
+    timestamp: new Date().toISOString(),
   }
   
-  console.error('[DesaPOS Error]', errorLog)
+  console.error('[ERROR]', errorLog)
 }
 
 export function getErrorMessage(code) {

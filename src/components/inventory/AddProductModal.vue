@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { useInventory } from '@/composables/useInventory'
+import { useInventory } from '@/composables/inventory/useInventory'
 import { useValidation } from '@/composables/useValidation'
 import { uploadProductImage, validateImageFile } from '@/services/imageService'
 
@@ -40,6 +40,7 @@ watch(() => props.isOpen, (val) => {
 function validateForm() {
   const validation = validateProductForm(newProduct.value)
   formErrors.value = validation.errors
+
   return validation.isValid
 }
 
@@ -48,6 +49,7 @@ function onImageSelected(e) {
   if (!file) return
 
   const validation = validateImageFile(file)
+
   if (!validation.isValid) {
     formErrors.value.image = validation.error
     imageFile.value = null
