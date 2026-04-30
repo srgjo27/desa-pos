@@ -150,7 +150,7 @@ async function handleCheckout() {
                   </label>
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-amber-300">Rp</span>
-                    <input type="text" placeholder="0" @input="onDiscountInput"
+                    <input type="text" placeholder="0" autocomplete="off" @input="onDiscountInput"
                       class="w-full bg-amber-100 border border-amber-200 rounded-lg pl-12 pr-4 py-3 text-base font-semibold text-amber-900 placeholder-amber-300 focus:outline-none focus:bg-white focus:border-amber-400 transition-colors" />
                   </div>
                   <p class="text-xs text-amber-600 mt-2">Kasir kasih diskon / potongan harga untuk pembeli</p>
@@ -195,7 +195,7 @@ async function handleCheckout() {
                     <div class="relative">
                       <span class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-gray-400">Rp</span>
                       <input :value="amountPaidRaw ? Number(amountPaidRaw).toLocaleString('id-ID') : ''"
-                        @input="onCashInput" type="text" inputmode="numeric"
+                        @input="onCashInput" type="text" inputmode="numeric" autocomplete="off"
                         class="w-full bg-white border border-gray-200 focus:border-green-500 rounded-lg py-3 pl-12 pr-4 text-right font-semibold text-base focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-mono"
                         placeholder="0" autofocus />
                     </div>

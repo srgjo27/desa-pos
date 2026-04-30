@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 import { useAttrs, useSlots } from 'vue'
 
+defineOptions({
+  inheritAttrs: true,
+})
+
 const props = defineProps({
   label: {
     type: String,
@@ -16,7 +20,7 @@ const props = defineProps({
     default: '',
   },
   modelValue: {
-    type: String,
+    type: [String, Number],
     default: '',
   },
   placeholder: {
@@ -114,8 +118,8 @@ const paddingClasses = computed(() => {
     </label>
 
     <div class="relative">
-      <input :id="id" :type="type" :value="modelValue" :placeholder="placeholder" :autocomplete="autocomplete"
-        :disabled="disabled" :class="[
+      <input v-bind="attrs" :id="id" :type="type" :value="modelValue" :placeholder="placeholder"
+        :autocomplete="autocomplete" :disabled="disabled" :class="[
           'w-full text-gray-800 placeholder-gray-400',
           'bg-white border transition-all duration-200',
           'focus:outline-none focus:ring-0',
@@ -126,7 +130,6 @@ const paddingClasses = computed(() => {
             ? 'border-red-400 focus:border-red-500'
             : 'border-gray-200 focus:border-green-500 hover:border-gray-300',
           disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
-          attrs.class,
         ]" @input="emit('update:modelValue', $event.target.value)" />
 
       <div v-if="$slots.prefix" class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-auto">

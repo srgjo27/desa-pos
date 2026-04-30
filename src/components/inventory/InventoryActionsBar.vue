@@ -30,6 +30,7 @@ const searchQuery = computed({
       placeholder="Cari nama barang atau SKU..."
       rounded="lg"
       size="md"
+      autocomplete="off"
       class="w-full sm:max-w-xs"
     >
       <template #prefix>

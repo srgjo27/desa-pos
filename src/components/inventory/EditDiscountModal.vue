@@ -1,6 +1,8 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { toRef } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
+import { Button, Input } from '@/components/ui'
+import { useEditDiscountModal } from '@/composables/inventory/useEditDiscountModal'
 import { formatRupiah } from '@/utils/formatCurrency'
 
 const props = defineProps({
@@ -10,75 +12,28 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 
-const isOnDiscount = ref(false)
-const discountPriceRaw = ref('')
-const discountPercentRaw = ref('')
-
-watch(
-    () => props.product,
-    (newProduct) => {
-        if (newProduct) {
-            isOnDiscount.value = newProduct.is_on_discount || false
-            discountPriceRaw.value = newProduct.discount_price ? String(newProduct.discount_price) : ''
-            discountPercentRaw.value = ''
-        }
-    },
-    { immediate: true }
+const {
+    isOnDiscount,
+    discountPriceRaw,
+    discountPercentRaw,
+    normalPrice,
+    discountPrice,
+    discountAmount,
+    discountPercent,
+    onDiscountPriceInput,
+    setDiscountByPercent,
+    onDiscountPercentInput,
+    removeDiscount,
+    handleSave,
+    handleClose,
+} = useEditDiscountModal(
+    toRef(props, 'isOpen'),
+    toRef(props, 'product'),
+    {
+        onClose: () => emit('close'),
+        onSave: (payload) => emit('save', payload),
+    }
 )
-
-const normalPrice = computed(() => props.product?.price || 0)
-const discountPrice = computed(() => Number(discountPriceRaw.value) || 0)
-const discountAmount = computed(() => normalPrice.value - discountPrice.value)
-const discountPercent = computed(() => {
-    if (normalPrice.value === 0) return 0
-    return Math.round((discountAmount.value / normalPrice.value) * 100)
-})
-
-function onDiscountPriceInput(e) {
-    const raw = e.target.value.replace(/\D/g, '')
-    discountPriceRaw.value = raw
-    e.target.value = raw ? Number(raw).toLocaleString('id-ID') : ''
-}
-
-function setDiscountByPercent(percent) {
-    if (percent < 0 || percent > 100) return
-    const discounted = Math.round(normalPrice.value * ((100 - percent) / 100))
-    discountPercentRaw.value = percent.toString()
-    discountPriceRaw.value = discounted.toString()
-}
-
-function onDiscountPercentInput(e) {
-    const raw = e.target.value.replace(/\D/g, '')
-    if (raw === '') {
-        discountPercentRaw.value = ''
-    } else {
-        const percent = Math.min(100, Number(raw))
-        discountPercentRaw.value = percent.toString()
-        setDiscountByPercent(percent)
-    }
-}
-
-function removeDiscount() {
-    isOnDiscount.value = false
-    discountPriceRaw.value = ''
-    discountPercentRaw.value = ''
-}
-
-function handleSave() {
-    if (isOnDiscount.value && (!discountPrice.value || discountPrice.value >= normalPrice.value)) {
-        alert('Harga diskon harus lebih rendah dari harga normal!')
-        return
-    }
-
-    emit('save', {
-        is_on_discount: isOnDiscount.value,
-        discount_price: isOnDiscount.value ? discountPrice.value : null
-    })
-}
-
-function handleClose() {
-    emit('close')
-}
 </script>
 
 <template>
@@ -143,28 +98,29 @@ function handleClose() {
 
                                     <!-- Harga Diskon -->
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700 block mb-2">Harga Setelah
-                                            Diskon</label>
-                                        <div class="relative">
-                                            <span
-                                                class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-gray-400">Rp</span>
-                                            <input type="text" placeholder="Masukkan harga diskon"
-                                                @input="onDiscountPriceInput"
-                                                class="w-full bg-green-50 border-2 border-green-200 focus:border-green-500 rounded-lg py-3 pl-12 pr-4 text-right text-base text-gray-800 placeholder-gray-400 focus:outline-none transition-colors" />
-                                        </div>
+                                        <Input id="discount-price"
+                                            :modelValue="discountPriceRaw ? Number(discountPriceRaw).toLocaleString('id-ID') : ''"
+                                            type="text" size="md" rounded="lg" label="Harga Setelah Diskon"
+                                            autocomplete="off" placeholder="Masukkan harga diskon"
+                                            class="bg-green-50 border-green-200 focus:border-green-500 text-right"
+                                            @update:modelValue="onDiscountPriceInput">
+                                            <template #prefix>
+                                                <span class="font-semibold text-gray-400">Rp</span>
+                                            </template>
+                                        </Input>
                                     </div>
 
                                     <!-- Diskon Percent -->
                                     <div>
-                                        <label class="text-sm font-semibold text-gray-700 block mb-2">Atau Input
-                                            Persentase
-                                            Diskon</label>
-                                        <div class="relative">
-                                            <input type="text" placeholder="0 - 100" @input="onDiscountPercentInput"
-                                                class="w-full bg-gray-100 border-2 border-gray-200 focus:border-green-500 rounded-lg py-3 pl-4 pr-12 text-right text-base text-gray-800 placeholder-gray-400 focus:outline-none transition-colors" />
-                                            <span
-                                                class="absolute right-4 top-1/2 -translate-y-1/2 font-semibold text-gray-400">%</span>
-                                        </div>
+                                        <Input id="discount-percent" :modelValue="discountPercentRaw" type="text"
+                                            size="md" rounded="lg" label="Persentase Diskon" autocomplete="off"
+                                            placeholder="0 - 100"
+                                            class="bg-gray-100 border-gray-200 focus:border-green-500 text-right"
+                                            @update:modelValue="onDiscountPercentInput">
+                                            <template #suffix>
+                                                <span class="font-semibold text-gray-400">%</span>
+                                            </template>
+                                        </Input>
                                     </div>
 
                                     <!-- Quick Percent Buttons -->
@@ -186,7 +142,7 @@ function handleClose() {
                                         <div class="flex justify-between text-sm">
                                             <span class="text-gray-600">Harga Diskon</span>
                                             <span class="font-bold text-green-700">{{ formatRupiah(discountPrice)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="border-t border-orange-200 pt-2 flex justify-between text-sm">
                                             <span class="text-gray-600">Hemat</span>
@@ -224,18 +180,19 @@ function handleClose() {
 
                             <!-- Footer -->
                             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
-                                <button @click="removeDiscount" v-if="isOnDiscount"
-                                    class="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-md font-bold hover:bg-red-100 transition-colors focus:outline-none border border-red-200">
+                                <Button v-if="isOnDiscount" type="button" variant="danger" size="sm" rounded="md"
+                                    class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                                    @click="removeDiscount">
                                     Hapus Diskon
-                                </button>
-                                <button @click="handleClose"
-                                    class="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-md font-bold hover:bg-gray-50 transition-colors focus:outline-none">
+                                </Button>
+                                <Button type="button" variant="secondary" size="sm" rounded="md"
+                                    class="bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                                    @click="handleClose">
                                     Batal
-                                </button>
-                                <button @click="handleSave"
-                                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md font-bold hover:bg-green-700 transition-colors focus:outline-none">
+                                </Button>
+                                <Button type="button" size="sm" rounded="md" @click="handleSave">
                                     Simpan
-                                </button>
+                                </Button>
                             </div>
 
                         </DialogPanel>

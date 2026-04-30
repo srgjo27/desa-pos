@@ -178,7 +178,7 @@ async function submitCloseShift() {
                   <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-gray-500">Rp</span>
                     <input :value="closingCashRaw ? Number(closingCashRaw).toLocaleString('id-ID') : ''"
-                      @input="handleInputCash" type="text" placeholder="0"
+                      @input="handleInputCash" type="text" placeholder="0" autocomplete="off"
                       class="w-full text-right bg-white border border-gray-300 focus:border-green-500 rounded-lg pl-12 pr-4 py-3 font-semibold text-base focus:outline-none focus:ring-4 focus:ring-green-500/10">
                   </div>
                 </div>

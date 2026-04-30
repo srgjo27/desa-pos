@@ -1,7 +1,8 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { toRef } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { useValidation } from '@/composables/useValidation'
+import { Alert, Button, Input } from '@/components/ui'
+import { useAddStockModal } from '@/composables/inventory/useAddStockModal'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -14,31 +15,17 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm'])
 
-const { validateQuantity } = useValidation()
-const stockToAdd = ref(1)
-const error = ref(null)
-
-watch(() => props.isOpen, (val) => {
-  if (val) {
-    stockToAdd.value = 1
-    error.value = null
-  }
-})
-
-function validateInput() {
-  const validationError = validateQuantity(stockToAdd.value, 1, 100000)
-  if (validationError) {
-    error.value = validationError
-    return false
-  }
-  error.value = null
-  return true
-}
-
-function submitAddStock() {
-  if (!props.product || !validateInput()) return
-  emit('confirm', { productId: props.product.id, qty: stockToAdd.value })
-}
+const {
+  stockToAdd,
+  error,
+  validateInput,
+  handleStockInput,
+  submitAddStock,
+} = useAddStockModal(
+  toRef(props, 'isOpen'),
+  toRef(props, 'product'),
+  (payload) => emit('confirm', payload)
+)
 </script>
 
 <template>
@@ -73,27 +60,18 @@ function submitAddStock() {
                       }}</span> pc(s)</p>
                 </div>
 
-                <!-- ERROR NOTIFICATION -->
-                <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                  {{ error }}
-                </div>
+                <!-- Alert -->
+                <Alert v-if="error" type="error" :message="error" />
 
-                <!-- INPUT QTY TAMBAH -->
                 <div>
-                  <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Jumlah Barang
-                    Masuk <span class="text-red-500">*</span></label>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-end gap-2">
                     <button type="button" @click="stockToAdd = Math.max(1, stockToAdd - 1)"
                       class="w-10 h-10 border border-gray-300 rounded-md font-bold text-lg focus:outline-none hover:bg-gray-50 text-gray-600 transition-colors">
                       -
                     </button>
-                    <input v-model.number="stockToAdd" @blur="validateInput" type="number" min="1"
-                      class="w-full text-center border rounded-md px-3 py-2 text-sm font-bold outline-none transition-colors"
-                      :class="[
-                        error
-                          ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                          : 'border-gray-300 focus:border-green-600'
-                      ]" />
+                    <Input id="add-stock-qty" :modelValue="stockToAdd" type="number" min="1" size="sm" rounded="md"
+                      label="Jumlah Barang Masuk" required autocomplete="off" class="text-center" :error="error"
+                      @blur="validateInput" @update:modelValue="handleStockInput" />
                     <button type="button" @click="stockToAdd++"
                       class="w-10 h-10 border border-gray-300 rounded-md font-bold text-lg focus:outline-none hover:bg-gray-50 text-gray-600 transition-colors">
                       +
@@ -102,14 +80,14 @@ function submitAddStock() {
                 </div>
 
                 <div class="pt-2 flex justify-end gap-3 text-sm">
-                  <button type="button" @click="$emit('close')" :disabled="isLoading"
-                    class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-md transition-colors focus:outline-none border border-transparent disabled:opacity-50">
+                  <Button type="button" variant="secondary" size="sm" rounded="md" :disabled="isLoading"
+                    class="bg-white text-gray-700 border border-gray-200 hover:bg-gray-50" @click="$emit('close')">
                     Batal
-                  </button>
-                  <button type="button" @click="submitAddStock" :disabled="isLoading || stockToAdd < 1"
-                    class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md disabled:opacity-50 transition-colors focus:outline-none border border-transparent">
+                  </Button>
+                  <Button type="button" size="sm" rounded="md" :disabled="isLoading || stockToAdd < 1"
+                    @click="submitAddStock">
                     Konfirmasi
-                  </button>
+                  </Button>
                 </div>
               </div>
 

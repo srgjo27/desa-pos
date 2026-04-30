@@ -35,7 +35,10 @@ export function useInventory() {
     error.value = null
 
     try {
-      if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
+      if (!authStore.user?.id) {
+        error.value = 'Akses ditolak. Sesi tidak valid.'
+        return { success: false, error: error.value }
+      }
 
       const { data: newProd, error: insertErr } = await supabase
         .from('products')
@@ -45,7 +48,10 @@ export function useInventory() {
         .select()
         .single()
 
-      if (insertErr) return
+      if (insertErr) {
+        error.value = insertErr.message
+        return { success: false, error: error.value }
+      }
 
       if (stock > 0) {
         const { error: logErr } = await supabase
@@ -60,10 +66,11 @@ export function useInventory() {
             notes: 'Stok awal penambahan produk baru'
           })
 
-        if (logErr) return
+        if (logErr) {
+          error.value = logErr.message
+          return { success: false, error: error.value }
+        }
       }
-
-      products.value.push(newProd)
 
       await logActivity({
         activityType: ACTIVITY_TYPES.INVENTORY_ADD,
@@ -80,9 +87,10 @@ export function useInventory() {
         }
       })
 
-      return { data: newProd }
+      return { success: true, data: newProd }
     } catch (err) {
       error.value = err.message
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
@@ -135,7 +143,7 @@ export function useInventory() {
   async function deleteProduct(productId) {
     loading.value = true
     error.value = null
-    
+
     try {
       const productToDelete = products.value.find(p => p.id === productId)
 
@@ -187,7 +195,7 @@ export function useInventory() {
         stock,
         image_url: image_url || null
       }
-      
+
       const { data: updatedProd, error: updateErr } = await supabase
         .from('products')
         .update(updatePayload)

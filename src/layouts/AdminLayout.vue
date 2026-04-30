@@ -19,6 +19,7 @@ const props = defineProps({
 
 const router = useRouter()
 const { logout } = useAuth()
+const currentYear = new Date().getFullYear()
 
 function handleLogout() {
   logout()
@@ -81,6 +82,10 @@ function handleLogout() {
     <main class="flex-1 p-6 md:px-8 max-w-7xl mx-auto w-full">
       <slot></slot>
     </main>
+
+    <footer class="border-t border-gray-200 bg-white px-6 sm:px-8 py-4 text-center text-xs text-gray-500">
+      &copy; 2026 DesaPOS. All rights reserved.
+    </footer>
 
   </div>
 </template>

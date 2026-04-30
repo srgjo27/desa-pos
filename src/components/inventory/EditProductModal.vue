@@ -1,9 +1,8 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { toRef } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue'
-import { useInventory } from '@/composables/inventory/useInventory'
-import { useValidation } from '@/composables/useValidation'
-import { validateImageFile, updateProductImage } from '@/services/imageService'
+import { Alert, Button, Input } from '@/components/ui'
+import { useEditProductModal } from '@/composables/inventory/useEditProductModal'
 
 const props = defineProps({
     isOpen: Boolean,
@@ -15,114 +14,23 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'updated'])
 
-const invStore = useInventory()
-const { validateProductForm } = useValidation()
-
-const editProduct = ref({
-    id: null,
-    sku: '',
-    name: '',
-    cost_price: 0,
-    price: 0,
-    stock: 0,
-    image_url: null
-})
-
-const imageFile = ref(null)
-const imagePreview = ref(null)
-const formErrors = ref({})
-const isUploading = ref(false)
-
-watch(() => props.isOpen, (val) => {
-    if (val && props.product) {
-        editProduct.value = {
-            id: props.product.id,
-            sku: props.product.sku,
-            name: props.product.name,
-            cost_price: props.product.cost_price,
-            price: props.product.price,
-            stock: props.product.stock,
-            image_url: props.product.image_url
-        }
-        imageFile.value = null
-        imagePreview.value = props.product.image_url ? props.product.image_url : null
-        formErrors.value = {}
-        isUploading.value = false
+const {
+    editProduct,
+    imagePreview,
+    formErrors,
+    isUploading,
+    isSaving,
+    onImageSelected,
+    clearImage,
+    submitEditProduct,
+} = useEditProductModal(
+    toRef(props, 'isOpen'),
+    toRef(props, 'product'),
+    {
+        onClose: () => emit('close'),
+        onUpdated: () => emit('updated'),
     }
-})
-
-function validateForm() {
-    const validation = validateProductForm(editProduct.value)
-    formErrors.value = validation.errors
-    return validation.isValid
-}
-
-function onImageSelected(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const validation = validateImageFile(file)
-    if (!validation.isValid) {
-        formErrors.value.image = validation.error
-        imageFile.value = null
-        return
-    }
-
-    imageFile.value = file
-    formErrors.value.image = null
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-        imagePreview.value = e.target.result
-    }
-    reader.readAsDataURL(file)
-}
-
-function clearImage() {
-    imageFile.value = null
-    imagePreview.value = null
-    formErrors.value.image = null
-}
-
-async function submitEditProduct() {
-    if (!validateForm()) return
-
-    isUploading.value = true
-
-    try {
-        let imageUrl = editProduct.value.image_url
-
-        if (imageFile.value) {
-            const updateResult = await updateProductImage(imageFile.value, editProduct.value.image_url, editProduct.value.name)
-            if (!updateResult.success) {
-                formErrors.value.image = updateResult.error
-                return
-            }
-
-            imageUrl = updateResult.publicUrl
-        }
-
-        const res = await invStore.editProduct({
-            id: editProduct.value.id,
-            sku: editProduct.value.sku,
-            name: editProduct.value.name,
-            cost_price: editProduct.value.cost_price,
-            price: editProduct.value.price,
-            stock: editProduct.value.stock,
-            image_url: imageUrl,
-            stockBefore: props.product.stock
-        })
-
-        if (res.success) {
-            emit('updated')
-            emit('close')
-        }
-    } catch (err) {
-        formErrors.value.submit = err.message
-    } finally {
-        isUploading.value = false
-    }
-}
+)
 </script>
 
 <template>
@@ -150,13 +58,9 @@ async function submitEditProduct() {
                             <form @submit.prevent="submitEditProduct"
                                 class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
 
-                                <!-- ERROR NOTIFICATION -->
-                                <div v-if="formErrors.submit"
-                                    class="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                                    {{ formErrors.submit }}
-                                </div>
+                                <!-- Alert -->
+                                <Alert v-if="formErrors.submit" type="error" :message="formErrors.submit" />
 
-                                <!-- GAMBAR PRODUK -->
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Gambar
@@ -200,113 +104,62 @@ async function submitEditProduct() {
                                     </p>
                                 </div>
 
-                                <!-- SKU (Read-only) -->
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Kode
-                                        SKU <span class="text-red-500">*</span></label>
-                                    <input v-model="editProduct.sku" type="text" disabled
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
-                                        placeholder="SKU tidak bisa diubah" />
+                                    <Input id="edit-product-sku" :modelValue="editProduct.sku" type="text" size="sm"
+                                        rounded="md" label="Kode SKU" required autocomplete="off" disabled
+                                        class="bg-gray-50 text-gray-500" placeholder="SKU tidak bisa diubah" />
                                     <p class="mt-1 text-xs text-gray-500">Kode SKU tidak dapat diubah (audit trail)</p>
                                 </div>
 
-                                <!-- NAMA -->
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Nama
-                                        Barang <span class="text-red-500">*</span></label>
-                                    <input v-model="editProduct.name" type="text"
-                                        class="w-full border rounded-md px-3 py-2 text-sm outline-none transition-colors"
-                                        :class="[
-                                            formErrors.name
-                                                ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                                                : 'border-gray-300 focus:border-green-600 focus:ring-1 focus:ring-green-600'
-                                        ]" placeholder="Contoh: Sabun Cuci" />
-
-                                    <p v-if="formErrors.name" class="mt-1 text-xs text-red-600">
-                                        {{ formErrors.name }}
-                                    </p>
+                                    <Input id="edit-product-name" v-model="editProduct.name" type="text" size="sm"
+                                        rounded="md" label="Nama Barang" required autocomplete="off"
+                                        placeholder="Contoh: Sabun Cuci" :error="formErrors.name" />
                                 </div>
 
-                                <!-- HARGA -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label
-                                            class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide"
-                                            title="Harga kulakan">Harga Modal <span
-                                                class="text-red-500">*</span></label>
-                                        <div class="relative">
-                                            <span
-                                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
-                                            <input v-model.number="editProduct.cost_price" type="number" min="0"
-                                                step="100"
-                                                class="w-full border rounded-md pl-9 pr-3 py-2 text-sm outline-none transition-colors"
-                                                :class="[
-                                                    formErrors.cost_price
-                                                        ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                                                        : 'border-gray-300 focus:border-green-600 focus:ring-1 focus:ring-green-600'
-                                                ]" placeholder="0" />
-                                        </div>
-
-                                        <p v-if="formErrors.cost_price" class="mt-1 text-xs text-red-600">
-                                            {{ formErrors.cost_price }}
-                                        </p>
+                                        <Input id="edit-product-cost-price" :modelValue="editProduct.cost_price"
+                                            type="number" min="0" step="100" size="sm" rounded="md" label="Harga Modal"
+                                            required title="Harga kulakan" placeholder="0"
+                                            :error="formErrors.cost_price"
+                                            @update:modelValue="(value) => (editProduct.cost_price = Number(value || 0))">
+                                            <template #prefix>
+                                                <span class="text-gray-400 text-sm font-medium">Rp</span>
+                                            </template>
+                                        </Input>
                                     </div>
                                     <div>
-                                        <label
-                                            class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide"
-                                            title="Harga yang dijual di Kasir">Harga Jual <span
-                                                class="text-red-500">*</span></label>
-                                        <div class="relative">
-                                            <span
-                                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
-                                            <input v-model.number="editProduct.price" type="number" min="0" step="100"
-                                                class="w-full border rounded-md pl-9 pr-3 py-2 text-sm outline-none transition-colors"
-                                                :class="[
-                                                    formErrors.price
-                                                        ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                                                        : 'border-gray-300 focus:border-green-600 focus:ring-1 focus:ring-green-600'
-                                                ]" placeholder="0" />
-                                        </div>
-
-                                        <p v-if="formErrors.price" class="mt-1 text-xs text-red-600">
-                                            {{ formErrors.price }}
-                                        </p>
+                                        <Input id="edit-product-price" :modelValue="editProduct.price" type="number"
+                                            min="0" step="100" size="sm" rounded="md" label="Harga Jual" required
+                                            title="Harga yang dijual di Kasir" placeholder="0" :error="formErrors.price"
+                                            @update:modelValue="(value) => (editProduct.price = Number(value || 0))">
+                                            <template #prefix>
+                                                <span class="text-gray-400 text-sm font-medium">Rp</span>
+                                            </template>
+                                        </Input>
                                     </div>
                                 </div>
 
-                                <!-- STOK AWAL -->
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Stok
-                                        <span class="text-red-500">*</span></label>
-                                    <input v-model.number="editProduct.stock" type="number" min="0"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:border-green-600 focus:ring-1 focus:ring-green-600 outline-none transition-colors"
-                                        placeholder="0" />
+                                    <Input id="edit-product-stock" :modelValue="editProduct.stock" type="number" min="0"
+                                        size="sm" rounded="md" label="Stok" required placeholder="0"
+                                        @update:modelValue="(value) => (editProduct.stock = Number(value || 0))" />
                                     <p class="mt-1 text-xs text-gray-500">Untuk adjustment stok yang lebih detail,
                                         gunakan tombol "Tambah Stok" pada tabel</p>
                                 </div>
 
                                 <div class="pt-2 flex justify-end gap-3 text-sm">
-                                    <button type="button" @click="$emit('close')"
-                                        :disabled="isUploading || invStore.loading.value"
-                                        class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-md transition-colors focus:outline-none border border-transparent disabled:opacity-50">
+                                    <Button type="button" variant="secondary" size="sm" rounded="md"
+                                        :disabled="isSaving"
+                                        class="bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                                        @click="$emit('close')">
                                         Batal
-                                    </button>
-                                    <button type="submit" :disabled="isUploading || invStore.loading.value"
-                                        class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md disabled:opacity-50 transition-colors focus:outline-none border border-transparent flex items-center gap-2">
-                                        <span v-if="isUploading || invStore.loading.value">
-                                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                    stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                        </span>
+                                    </Button>
+                                    <Button type="submit" size="sm" rounded="md" :loading="isSaving"
+                                        :disabled="isSaving">
                                         {{ isUploading ? 'Mengupload...' : 'Simpan Perubahan' }}
-                                    </button>
+                                    </Button>
                                 </div>
                             </form>
 
