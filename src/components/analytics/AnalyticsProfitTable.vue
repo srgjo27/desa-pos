@@ -27,6 +27,8 @@ const columns = computed(() => [
     { key: 'grand_total', label: 'Pendapatan' },
     { key: 'laba_kotor', label: 'Laba Bersih', width: 'w-36' },
 ])
+
+const headerAlignRight = new Set(['total_modal', 'grand_total', 'laba_kotor'])
 </script>
 
 <template>
@@ -46,25 +48,16 @@ const columns = computed(() => [
         <Table class="overflow-x-auto" :columns="columns" :rows="rows" :loading="loading" size="sm" :striped="true"
             :bordered="true" :hoverable="true" emptyMessage="Tidak ada transaksi ditemukan pada rentang tanggal ini."
             loadingMessage="Memuat data analitik...">
-            <template #header-total_modal>
-                <div class="text-right">Total Modal</div>
-            </template>
-            <template #header-grand_total>
-                <div class="text-right">Pendapatan</div>
-            </template>
-            <template #header-laba_kotor>
-                <div class="text-right">Laba Bersih</div>
+            <template v-for="col in columns" :key="`header-${col.key}`" #[`header-${col.key}`]>
+                <div :class="headerAlignRight.has(col.key) ? 'text-right' : ''">{{ col.label }}</div>
             </template>
 
-            <template #cell-created_at="{ row }">
-                <div class="border-r border-gray-100">
+            <template v-for="col in columns" :key="col.key" #[`cell-${col.key}`]="{ row }">
+                <div v-if="col.key === 'created_at'" class="border-r border-gray-100">
                     <p class="font-bold">{{ formatDate(row.created_at) }}</p>
                     <p class="text-xs text-gray-400 font-mono">{{ formatTime(row.created_at) }}</p>
                 </div>
-            </template>
-
-            <template #cell-kasir="{ row }">
-                <div class="border-r border-gray-100">
+                <div v-else-if="col.key === 'kasir'" class="border-r border-gray-100">
                     <div class="flex items-center gap-2">
                         <div
                             class="w-6 h-6 rounded bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400">
@@ -73,26 +66,20 @@ const columns = computed(() => [
                         <span>{{ row.kasir }}</span>
                     </div>
                 </div>
-            </template>
-
-            <template #cell-total_modal="{ row }">
-                <div class="text-right font-mono text-sm text-gray-500 border-l border-gray-100">
+                <div v-else-if="col.key === 'total_modal'"
+                    class="text-right font-mono text-sm text-gray-500 border-l border-gray-100">
                     {{ formatRupiah(row.total_modal || 0) }}
                 </div>
-            </template>
-
-            <template #cell-grand_total="{ row }">
-                <div class="text-right font-mono text-sm font-bold border-l border-gray-100">
+                <div v-else-if="col.key === 'grand_total'"
+                    class="text-right font-mono text-sm font-bold border-l border-gray-100">
                     {{ formatRupiah(row.grand_total || 0) }}
                 </div>
-            </template>
-
-            <template #cell-laba_kotor="{ row }">
-                <div class="text-right bg-green-50/30 border-l border-gray-100">
+                <div v-else-if="col.key === 'laba_kotor'" class="text-right bg-green-50/30 border-l border-gray-100">
                     <span class="inline-flex items-center justify-center font-mono font-bold text-sm text-green-700">
                         {{ formatRupiah(row.laba_kotor || 0) }}
                     </span>
                 </div>
+                <div v-else>{{ row[col.key] }}</div>
             </template>
         </Table>
     </div>

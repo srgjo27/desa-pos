@@ -1,28 +1,30 @@
 <script setup>
-import { computed } from 'vue'
-import { Input, Button } from '@/components/ui'
+import { computed } from "vue";
+import { Input, Button } from "@/components/ui";
 
 const props = defineProps({
   modelValue: {
     type: String,
-    default: '',
+    default: "",
   },
   isExporting: {
     type: Boolean,
     default: false,
   },
-})
+});
 
-const emit = defineEmits(['update:modelValue', 'export', 'add'])
+const emit = defineEmits(["update:modelValue", "export", "add"]);
 
 const searchQuery = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
-})
+  set: (value) => emit("update:modelValue", value),
+});
 </script>
 
 <template>
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 w-full">
+  <div
+    class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 w-full"
+  >
     <Input
       id="search-products"
       v-model="searchQuery"
@@ -47,7 +49,11 @@ const searchQuery = computed({
         class="sm:w-auto"
         rounded="md"
       >
-        <i v-if="!isExporting" class="pi pi-file-pdf" style="font-size: 12px"></i>
+        <i
+          v-if="!isExporting"
+          class="pi pi-file-pdf"
+          style="font-size: 12px"
+        ></i>
         Export PDF
       </Button>
       <Button

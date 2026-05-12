@@ -30,7 +30,7 @@ export async function uploadProductImage(file, productName = '') {
   try {
     const validation = validateImageFile(file)
 
-    if (!validation.isValid) throw validation.error
+    if (!validation.isValid) return { success: false, error: validation.error }
 
     const timestamp = Date.now()
     const fileExt = file.name.split('.').pop()
@@ -48,7 +48,7 @@ export async function uploadProductImage(file, productName = '') {
         upsert: false
       })
 
-    if (uploadErr) throw 'Gagal mengupload gambar. Coba lagi nanti.'
+    if (uploadErr) return { success: false, error: 'Gagal mengupload gambar. Coba lagi nanti.' }
 
     const { data: publicUrlData } = supabase.storage
       .from(BUCKET_NAME)
@@ -56,14 +56,11 @@ export async function uploadProductImage(file, productName = '') {
 
     const publicUrl = publicUrlData?.publicUrl
 
-    if (!publicUrl) throw 'Gagal mendapatkan URL gambar setelah upload'
+    if (!publicUrl) return { success: false, error: 'Gagal mendapatkan URL gambar setelah upload' }
 
     return { success: true, publicUrl }
   } catch (err) {
-    return {
-      success: false,
-      error: 'Gagal mengupload gambar. Periksa koneksi internet Anda.'
-    }
+    return { success: false, error: err?.message || err }
   }
 }
 
@@ -79,11 +76,11 @@ export async function deleteProductImage(publicUrl) {
       .from(BUCKET_NAME)
       .remove([filePath])
 
-    if (deleteErr) return { success: false, error: 'Gagal menghapus gambar lama' }
+    if (deleteErr) return { success: false, error: 'Gagal menghapus gambar' }
 
     return { success: true }
   } catch (err) {
-    return { success: false }
+    return { success: false, error: err?.message || err }
   }
 }
 
@@ -96,6 +93,6 @@ export async function updateProductImage(newFile, oldPublicUrl, productName) {
 
     return { success: true, publicUrl: uploadResult.publicUrl }
   } catch (err) {
-    return { success: false }
+    return { success: false, error: err?.message || err }
   }
 }

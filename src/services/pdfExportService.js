@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { formatRupiah } from '@/utils/formatCurrency'
+import { formatRupiah } from '@/utils/format'
 
 export async function generateDailySalesReport({
   title = 'Laporan Penjualan',

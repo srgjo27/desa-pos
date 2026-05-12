@@ -84,6 +84,7 @@ export function useInventoryPage() {
     })
 
     if (res.success) {
+      alert('Diskon berhasil diperbarui!')
       isModalDiscountOpen.value = false
     } else {
       alert(invStore.error.value)

@@ -1,13 +1,13 @@
 <script setup>
-import AddProductModal from '@/components/inventory/AddProductModal.vue'
-import EditProductModal from '@/components/inventory/EditProductModal.vue'
-import AddStockModal from '@/components/inventory/AddStockModal.vue'
-import EditDiscountModal from '@/components/inventory/EditDiscountModal.vue'
-import InventoryActionsBar from '@/components/inventory/InventoryActionsBar.vue'
-import InventoryMetrics from '@/components/inventory/InventoryMetrics.vue'
-import InventoryTable from '@/components/inventory/InventoryTable.vue'
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import { useInventoryPage } from '@/composables/inventory/useInventoryPage'
+import AddProductModal from "@/components/inventory/AddProductModal.vue";
+import EditProductModal from "@/components/inventory/EditProductModal.vue";
+import AddStockModal from "@/components/inventory/AddStockModal.vue";
+import EditDiscountModal from "@/components/inventory/EditDiscountModal.vue";
+import InventoryActionsBar from "@/components/inventory/InventoryActionsBar.vue";
+import InventoryMetrics from "@/components/inventory/InventoryMetrics.vue";
+import InventoryTable from "@/components/inventory/InventoryTable.vue";
+import AdminLayout from "@/layouts/AdminLayout.vue";
+import { useInventoryPage } from "@/composables/inventory/useInventoryPage";
 
 const {
   searchQuery,
@@ -30,12 +30,19 @@ const {
   handleEditProduct,
   handleSaveDiscount,
   handleExportInventoryPDF,
-} = useInventoryPage()
+} = useInventoryPage();
 </script>
 
 <template>
-  <AdminLayout title="Katalog Inventaris" subtitle="BUMDes DesaPOS - Mode Admin" activeTab="inventory">
-    <InventoryMetrics :totalProducts="totalProducts" :totalAssetValue="totalAssetValue" />
+  <AdminLayout
+    title="Katalog Inventaris"
+    subtitle="BUMDes DesaPOS - Mode Admin"
+    activeTab="inventory"
+  >
+    <InventoryMetrics
+      :totalProducts="totalProducts"
+      :totalAssetValue="totalAssetValue"
+    />
 
     <InventoryActionsBar
       v-model="searchQuery"
@@ -54,16 +61,31 @@ const {
     />
 
     <!-- Modals -->
-    <AddProductModal :isOpen="isModalProductOpen" @close="isModalProductOpen = false" />
+    <AddProductModal
+      :isOpen="isModalProductOpen"
+      @close="isModalProductOpen = false"
+    />
 
-    <EditProductModal :isOpen="isModalEditOpen" :product="selectedProduct" @close="isModalEditOpen = false"
-      @updated="handleEditProduct" />
+    <EditProductModal
+      :isOpen="isModalEditOpen"
+      :product="selectedProduct"
+      @close="isModalEditOpen = false"
+      @updated="handleEditProduct"
+    />
 
-    <AddStockModal :isOpen="isModalStockOpen" :product="selectedProduct" :isLoading="isInventoryLoading"
-      @close="isModalStockOpen = false" @confirm="handleAddStock" />
+    <AddStockModal
+      :isOpen="isModalStockOpen"
+      :product="selectedProduct"
+      :isLoading="isInventoryLoading"
+      @close="isModalStockOpen = false"
+      @confirm="handleAddStock"
+    />
 
-    <EditDiscountModal :isOpen="isModalDiscountOpen" :product="selectedProduct" @close="isModalDiscountOpen = false"
-      @save="handleSaveDiscount" />
-
+    <EditDiscountModal
+      :isOpen="isModalDiscountOpen"
+      :product="selectedProduct"
+      @close="isModalDiscountOpen = false"
+      @save="handleSaveDiscount"
+    />
   </AdminLayout>
 </template>

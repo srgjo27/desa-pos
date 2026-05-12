@@ -49,7 +49,7 @@ export function useUsers() {
         if (index !== -1) {
           users.value[index].is_active = newStatus
         }
-        
+
         const authStore = useAuthStore()
         if (authStore.user?.id) {
           await logActivity({
@@ -65,7 +65,7 @@ export function useUsers() {
             }
           })
         }
-        
+
         return true
       }
     } catch (err) {
@@ -117,7 +117,7 @@ export function useUsers() {
       }
 
       users.value = users.value.filter(u => u.id !== userId)
-      
+
       const authStore = useAuthStore()
       if (authStore.user?.id && userToDelete) {
         await logActivity({
@@ -134,7 +134,7 @@ export function useUsers() {
           }
         })
       }
-      
+
       return true
     } catch (err) {
       error.value = 'Terjadi kesalahan sistem saat menghapus pengguna.'

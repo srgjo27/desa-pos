@@ -116,7 +116,10 @@ export function useInventory() {
         .update({ stock: stockAfter })
         .eq('id', productId)
 
-      if (updateErr) return
+      if (updateErr) {
+        error.value = updateErr.message
+        return { success: false, error: error.value }
+      }
 
       const { error: logErr } = await supabase
         .from('stock_logs')
@@ -130,11 +133,16 @@ export function useInventory() {
           notes: notes || 'Restock manual via Dashboard'
         })
 
-      if (logErr) return
+      if (logErr) {
+        error.value = logErr.message
+        return { success: false, error: error.value }
+      }
 
       products.value[prodIndex].stock = stockAfter
+      return { success: true }
     } catch (err) {
       error.value = err.message
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
@@ -152,7 +160,10 @@ export function useInventory() {
         .update({ is_active: false })
         .eq('id', productId)
 
-      if (delErr) return
+      if (delErr) {
+        error.value = delErr.message
+        return { success: false, error: error.value }
+      }
 
       products.value = products.value.filter(p => p.id !== productId)
 
@@ -172,8 +183,10 @@ export function useInventory() {
           }
         })
       }
+      return { success: true }
     } catch (err) {
       error.value = err.message
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
@@ -183,7 +196,10 @@ export function useInventory() {
     loading.value = true
     error.value = null
     try {
-      if (!authStore.user?.id) error.value = 'Akses ditolak. Sesi tidak valid.'
+      if (!authStore.user?.id) {
+        error.value = 'Akses ditolak. Sesi tidak valid.'
+        return { success: false, error: error.value }
+      }
 
       const stockAfter = stock
       const stockDifference = stockAfter - stockBefore
@@ -203,7 +219,10 @@ export function useInventory() {
         .select()
         .single()
 
-      if (updateErr) return
+      if (updateErr) {
+        error.value = updateErr.message
+        return { success: false, error: error.value }
+      }
 
       if (stockDifference !== 0) {
         const { error: logErr } = await supabase
@@ -218,7 +237,10 @@ export function useInventory() {
             notes: `Adjustment stok via Edit Produk (${stockBefore} → ${stockAfter})`
           })
 
-        if (logErr) return
+        if (logErr) {
+          error.value = logErr.message
+          return { success: false, error: error.value }
+        }
       }
 
       const prodIndex = products.value.findIndex(p => p.id === id)
@@ -243,9 +265,10 @@ export function useInventory() {
         }
       })
 
-      return { data: updatedProd }
+      return { success: true, data: updatedProd }
     } catch (err) {
       error.value = err.message
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
@@ -268,7 +291,10 @@ export function useInventory() {
         .select()
         .single()
 
-      if (updateErr) return
+      if (updateErr) {
+        error.value = updateErr.message
+        return { success: false, error: error.value }
+      }
 
       const prodIndex = products.value.findIndex(p => p.id === productId)
       if (prodIndex !== -1) {
@@ -279,9 +305,10 @@ export function useInventory() {
         }
       }
 
-      return { data: updatedProd }
+      return { success: true, data: updatedProd }
     } catch (err) {
       error.value = err.message
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }

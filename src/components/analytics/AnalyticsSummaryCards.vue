@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { Card } from '@/components/ui'
 import { formatRupiah } from '@/utils/formatCurrency'
 
 const props = defineProps({
@@ -37,15 +38,16 @@ const cards = computed(() => [
 
 <template>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div v-for="card in cards" :key="card.key"
-            class="bg-white p-5 border border-gray-200 rounded-lg flex items-center gap-4">
-            <div class="w-12 h-12 rounded-full flex items-center justify-center border" :class="card.iconClasses">
-                <i :class="card.icon" style="font-size: 20px"></i>
+        <Card v-for="card in cards" :key="card.key" padding="md" rounded="lg">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center border" :class="card.iconClasses">
+                    <i :class="card.icon" style="font-size: 20px"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">{{ card.label }}</p>
+                    <p class="text-xl font-black leading-none" :class="card.valueClass">{{ card.value }}</p>
+                </div>
             </div>
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase tracking-wide mb-1">{{ card.label }}</p>
-                <p class="text-xl font-black leading-none" :class="card.valueClass">{{ card.value }}</p>
-            </div>
-        </div>
+        </Card>
     </div>
 </template>
