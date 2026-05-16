@@ -1,29 +1,29 @@
 <script setup>
-import { computed } from 'vue'
-import { useAttrs } from 'vue'
+import { computed } from "vue";
+import { useAttrs } from "vue";
 
 defineOptions({
   inheritAttrs: false,
-})
+});
 
 const props = defineProps({
   title: {
     type: String,
-    default: '',
+    default: "",
   },
   subtitle: {
     type: String,
-    default: '',
+    default: "",
   },
   padding: {
     type: String,
-    default: 'md',
-    validator: (v) => ['sm', 'md', 'lg'].includes(v),
+    default: "md",
+    validator: (v) => ["sm", "md", "lg"].includes(v),
   },
   rounded: {
     type: String,
-    default: 'lg',
-    validator: (v) => ['sm', 'md', 'lg', 'xl'].includes(v),
+    default: "lg",
+    validator: (v) => ["sm", "md", "lg", "xl"].includes(v),
   },
   bordered: {
     type: Boolean,
@@ -33,40 +33,43 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 
-const attrs = useAttrs()
+const attrs = useAttrs();
 
 const paddingClasses = computed(() => {
   const paddingMap = {
-    sm: 'p-3',
-    md: 'p-5',
-    lg: 'p-6',
-  }
-  return paddingMap[props.padding] || paddingMap.md
-})
+    sm: "p-3",
+    md: "p-5",
+    lg: "p-6",
+  };
+  return paddingMap[props.padding] || paddingMap.md;
+});
 
 const roundedClasses = computed(() => {
   const roundedMap = {
-    sm: 'rounded-sm',
-    md: 'rounded-md',
-    lg: 'rounded-lg',
-    xl: 'rounded-xl',
-  }
-  return roundedMap[props.rounded] || roundedMap.lg
-})
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  };
+  return roundedMap[props.rounded] || roundedMap.lg;
+});
 
 const cardClasses = computed(() => [
-  'bg-white',
-  props.bordered && 'border border-gray-200',
-  props.shadow && 'shadow-sm',
+  "bg-white",
+  props.bordered && "border border-gray-200",
+  props.shadow && "shadow-sm",
   roundedClasses.value,
-])
+]);
 </script>
 
 <template>
   <div v-bind="attrs" :class="cardClasses">
-    <div v-if="title || subtitle || $slots.header" :class="[paddingClasses, 'border-b border-gray-100']">
+    <div
+      v-if="title || subtitle || $slots.header"
+      :class="[paddingClasses, 'border-b border-gray-100']"
+    >
       <slot name="header">
         <div class="flex flex-col gap-1">
           <p class="text-sm font-semibold">{{ title }}</p>
@@ -79,7 +82,10 @@ const cardClasses = computed(() => [
       <slot />
     </div>
 
-    <div v-if="$slots.footer" :class="[paddingClasses, 'border-t border-gray-100']">
+    <div
+      v-if="$slots.footer"
+      :class="[paddingClasses, 'border-t border-gray-100']"
+    >
       <slot name="footer" />
     </div>
   </div>

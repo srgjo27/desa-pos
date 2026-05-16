@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { WORK_MINUTES_PER_WEEK, getDiffMinutes, formatDuration, getMonday, getSunday } from '@/utils/shiftHelpers'
-import { formatDate } from '@/utils/formatCurrency'
+import { formatDate } from '@/utils/format'
 
 export function useWeeklyStats(shiftsRef) {
     const selectedWeekOffset = ref(0)

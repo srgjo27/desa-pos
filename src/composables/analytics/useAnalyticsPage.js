@@ -3,7 +3,7 @@ import { useAnalytics } from '@/composables/analytics/useAnalytics'
 import { useChartAnalytics } from '@/composables/analytics/useChartAnalytics'
 import { useRoleProtection } from '@/composables/useRoleProtection'
 import { generateDailySalesReport } from '@/services/pdfExportService'
-import { formatDateToInputFormat, formatDate } from '@/utils/formatCurrency'
+import { formatDateToInputFormat, formatDate } from '@/utils/format'
 
 export function useAnalyticsPage() {
   const analytics = useAnalytics()

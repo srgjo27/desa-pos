@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { useUsers } from '@/composables/useUsers'
+import { useUsers } from '@/composables/user/useUsers'
 
 export function useUserDetail(userId) {
     const { getUserById, toggleUserStatus } = useUsers()
