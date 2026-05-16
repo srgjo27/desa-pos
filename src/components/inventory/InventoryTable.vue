@@ -16,7 +16,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["edit", "stock", "discount", "delete"]);
+const emit = defineEmits(["detail", "edit", "stock", "discount", "delete"]);
 
 const rowsRef = toRef(props, "rows");
 const { columns, sortedRows, toggleSort, getSortIcon } =
@@ -108,9 +108,18 @@ const { columns, sortedRows, toggleSort, getSortIcon } =
         <MenuItems
           class="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg z-50 focus:outline-none shadow-lg"
         >
+          <MenuItem @click="emit('detail', row)">
+            <button
+              class="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-indigo-50 border-b border-gray-100 transition-colors first:rounded-t-lg"
+            >
+              <i class="pi pi-eye" style="font-size: 12px"></i>
+              <span class="text-sm font-medium">Detail Produk</span>
+            </button>
+          </MenuItem>
+
           <MenuItem @click="emit('edit', row)">
             <button
-              class="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-blue-50 border-b border-gray-100 transition-colors first:rounded-t-lg"
+              class="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-blue-50 border-b border-gray-100 transition-colors"
             >
               <i class="pi pi-pencil" style="font-size: 12px"></i>
               <span class="text-sm font-medium">Edit Data</span>

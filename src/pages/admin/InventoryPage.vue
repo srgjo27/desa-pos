@@ -22,6 +22,7 @@ const {
   selectedProduct,
   isExporting,
   openProductModal,
+  goToDetail,
   openEditModal,
   openStockModal,
   openDiscountModal,
@@ -54,6 +55,7 @@ const {
     <InventoryTable
       :rows="filteredProducts"
       :loading="isInventoryLoading"
+      @detail="goToDetail"
       @edit="openEditModal"
       @stock="openStockModal"
       @discount="openDiscountModal"

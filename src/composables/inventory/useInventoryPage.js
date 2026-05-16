@@ -1,8 +1,10 @@
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useInventory } from '@/composables/inventory/useInventory'
 import { generateInventoryReport } from '@/services/pdfExportService'
 
 export function useInventoryPage() {
+  const router = useRouter()
   const invStore = useInventory()
 
   const searchQuery = ref('')
@@ -36,6 +38,10 @@ export function useInventoryPage() {
 
   function openProductModal() {
     isModalProductOpen.value = true
+  }
+
+  function goToDetail(product) {
+    router.push(`/inventory/${product.id}`)
   }
 
   function openEditModal(product) {
@@ -125,6 +131,7 @@ export function useInventoryPage() {
     selectedProduct,
     isExporting,
     openProductModal,
+    goToDetail,
     openEditModal,
     openStockModal,
     openDiscountModal,

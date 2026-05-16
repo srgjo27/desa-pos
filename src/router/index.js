@@ -36,6 +36,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['ADMIN'] },
   },
   {
+    path: '/inventory/:id',
+    name: 'ProductDetail',
+    component: () => import('@/pages/admin/ProductDetailPage.vue'),
+    meta: { requiresAuth: true, roles: ['ADMIN'] },
+  },
+  {
     path: '/analytics',
     name: 'Analytics',
     component: () => import('@/pages/admin/AnalyticsPage.vue'),
