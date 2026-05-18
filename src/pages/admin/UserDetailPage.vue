@@ -3,7 +3,7 @@ import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import ToggleUserModal from "@/components/users/ToggleUserModal.vue";
-import { useShifts } from "@/composables/useShifts";
+import { useShifts } from "@/composables/shifts/useShifts";
 import { useUserDetail } from "@/composables/user/useUserDetail";
 import { useWeeklyStats } from "@/composables/useWeeklyStats";
 import { ErrorState, LoadingState } from "@/components/ui";

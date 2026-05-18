@@ -117,7 +117,7 @@ function handleConfirm() {
                   Akun yang nonaktif tidak dapat masuk ke sistem POS Desa!
                 </p>
 
-                <div class="pt-3 flex justify-end gap-3 text-sm">
+                <div class="flex justify-end gap-3">
                   <Button
                     type="button"
                     @click="$emit('close')"

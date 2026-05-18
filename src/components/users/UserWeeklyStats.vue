@@ -28,7 +28,7 @@ const props = defineProps({
     >
       <div class="flex items-center gap-4 w-full lg:w-auto">
         <div
-          class="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center shrink-0 text-green-600 border border-green-100"
+          class="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center shrink-0 text-green-600"
         >
           <i class="pi pi-clock" style="font-size: 28px"></i>
         </div>
